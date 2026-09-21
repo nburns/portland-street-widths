@@ -27,8 +27,21 @@ export function indexBlocks(featureCollection) {
   return [...byId.values()];
 }
 
-export const passes = (b, { useMax, maxThr, useMin, minThr }) =>
-  (!useMax || b.bm <= maxThr) && (!useMin || b.bn <= minThr);
+// Each control owns one end of the block's width profile, in either
+// direction: bm is the widest point, bn the narrowest.
+//
+//   whole block at most X    bm <= X   never wider than X - the statute
+//   whole block at least X   bm >= X   gets at least this wide somewhere
+//   narrow part at most X    bn <= X   drops to X somewhere
+//   narrow part at least X   bn >= X   never narrower than X
+//
+// Fixing one statistic per control is what keeps every pair meaningful. An
+// earlier version read "whole block at least X" as a universal (bn >= X),
+// which made the most useful query - wider than 18 overall, narrowed to 18
+// somewhere - a contradiction that always returned nothing.
+export const passes = (b, st) =>
+  (!st.wholeOn || (st.wholeOp === "le" ? b.bm <= st.wholeVal : b.bm >= st.wholeVal)) &&
+  (!st.partOn || (st.partOp === "le" ? b.bn <= st.partVal : b.bn >= st.partVal));
 
 // Counted over the blocks currently drawn rather than over the whole dataset,
 // because with two independent tests no bin is wholly in or out: a 23-24 ft

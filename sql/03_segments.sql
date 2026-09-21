@@ -15,6 +15,43 @@ WHERE ST_Intersects(ST_Centroid(p.geom), b.geom);
 
 -- PMS subdivides a centerline segment into pavement sections that can differ in
 -- width, so collapse to one row per centerline with the variation preserved.
+-- Deterministic modal values. `mode()` breaks ties by whichever row a
+-- parallel aggregate finished first, so a segment whose pavement sections
+-- disagree evenly, or a street whose segments do, reported a different
+-- answer between runs. Most common wins; ties go to the lowest value, so
+-- the result is a function of the data alone.
+CREATE OR REPLACE TABLE pms_mode_surface_type AS
+SELECT localid, v AS surface_type FROM (
+  SELECT localid, surface_type AS v,
+         row_number() OVER (PARTITION BY localid ORDER BY count(*) DESC, surface_type) AS rn
+  FROM pms_portland WHERE surface_type IS NOT NULL AND localid IS NOT NULL
+  GROUP BY localid, surface_type
+) WHERE rn = 1;
+
+CREATE OR REPLACE TABLE pms_mode_functional_class AS
+SELECT localid, v AS functional_class FROM (
+  SELECT localid, functional_class AS v,
+         row_number() OVER (PARTITION BY localid ORDER BY count(*) DESC, functional_class) AS rn
+  FROM pms_portland WHERE functional_class IS NOT NULL AND localid IS NOT NULL
+  GROUP BY localid, functional_class
+) WHERE rn = 1;
+
+CREATE OR REPLACE TABLE pms_mode_owner AS
+SELECT localid, v AS owner FROM (
+  SELECT localid, owner AS v,
+         row_number() OVER (PARTITION BY localid ORDER BY count(*) DESC, owner) AS rn
+  FROM pms_portland WHERE owner IS NOT NULL AND localid IS NOT NULL
+  GROUP BY localid, owner
+) WHERE rn = 1;
+
+CREATE OR REPLACE TABLE pms_mode_maint_resp AS
+SELECT localid, v AS maint_resp FROM (
+  SELECT localid, maint_resp AS v,
+         row_number() OVER (PARTITION BY localid ORDER BY count(*) DESC, maint_resp) AS rn
+  FROM pms_portland WHERE maint_resp IS NOT NULL AND localid IS NOT NULL
+  GROUP BY localid, maint_resp
+) WHERE rn = 1;
+
 CREATE OR REPLACE TABLE pms_by_localid AS
 SELECT
   localid,
@@ -30,13 +67,17 @@ SELECT
                                             AS pave_width_ft,
   max(lanes)                                AS lanes,
   bool_or(curb = 'Y')                       AS has_curb,
-  mode(surface_type)                        AS surface_type,
-  mode(functional_class)                    AS functional_class,
-  mode(owner)                               AS owner,
-  mode(maint_resp)                          AS maint_resp,
+  any_value(m_surface_type.surface_type)                        AS surface_type,
+  any_value(m_functional_class.functional_class)                    AS functional_class,
+  any_value(m_owner.owner)                               AS owner,
+  any_value(m_maint_resp.maint_resp)                          AS maint_resp,
   round(avg(pci), 1)                        AS pci,
   max(inspection_year)                      AS inspection_year
 FROM pms_portland
+LEFT JOIN pms_mode_surface_type     m_surface_type     USING (localid)
+LEFT JOIN pms_mode_functional_class m_functional_class USING (localid)
+LEFT JOIN pms_mode_owner            m_owner            USING (localid)
+LEFT JOIN pms_mode_maint_resp       m_maint_resp       USING (localid)
 WHERE localid IS NOT NULL
 GROUP BY localid;
 
@@ -112,6 +153,30 @@ LEFT JOIN (SELECT DISTINCT localid FROM unimproved_row) u USING (localid);
 
 -- Street-level rollup, length-weighted. A street whose segments disagree shows
 -- it in the min/max rather than being averaged flat.
+CREATE OR REPLACE TABLE street_mode_row_width_mode_ft AS
+SELECT full_name, v AS row_width_mode_ft FROM (
+  SELECT full_name, row_width_mode_ft AS v,
+         row_number() OVER (PARTITION BY full_name ORDER BY count(*) DESC, row_width_mode_ft) AS rn
+  FROM street_segment WHERE row_width_mode_ft IS NOT NULL AND full_name IS NOT NULL AND trim(full_name) <> ''
+  GROUP BY full_name, row_width_mode_ft
+) WHERE rn = 1;
+
+CREATE OR REPLACE TABLE street_mode_functional_class AS
+SELECT full_name, v AS functional_class FROM (
+  SELECT full_name, functional_class AS v,
+         row_number() OVER (PARTITION BY full_name ORDER BY count(*) DESC, functional_class) AS rn
+  FROM street_segment WHERE functional_class IS NOT NULL AND full_name IS NOT NULL AND trim(full_name) <> ''
+  GROUP BY full_name, functional_class
+) WHERE rn = 1;
+
+CREATE OR REPLACE TABLE street_mode_maint_resp AS
+SELECT full_name, v AS maint_resp FROM (
+  SELECT full_name, maint_resp AS v,
+         row_number() OVER (PARTITION BY full_name ORDER BY count(*) DESC, maint_resp) AS rn
+  FROM street_segment WHERE maint_resp IS NOT NULL AND full_name IS NOT NULL AND trim(full_name) <> ''
+  GROUP BY full_name, maint_resp
+) WHERE rn = 1;
+
 CREATE OR REPLACE TABLE street_summary AS
 SELECT
   full_name,
@@ -121,7 +186,7 @@ SELECT
   round(sum(row_width_ft * len_ft)
         / nullif(sum(len_ft) FILTER (WHERE row_width_ft IS NOT NULL), 0), 1)
                                              AS row_width_ft,
-  mode(row_width_mode_ft)                    AS row_width_mode_ft,
+  any_value(s_row_width_mode_ft.row_width_mode_ft)                    AS row_width_mode_ft,
   min(row_width_ft)                          AS row_width_min_ft,
   max(row_width_ft)                          AS row_width_max_ft,
   count(row_width_ft)                        AS n_with_row_width,
@@ -132,9 +197,12 @@ SELECT
   min(road_width_ft)                         AS road_width_min_ft,
   max(road_width_ft)                         AS road_width_max_ft,
   count(road_width_ft)                       AS n_with_road_width,
-  mode(functional_class)                     AS functional_class,
-  mode(maint_resp)                           AS maint_resp
+  any_value(s_functional_class.functional_class)                     AS functional_class,
+  any_value(s_maint_resp.maint_resp)                           AS maint_resp
 FROM street_segment
+LEFT JOIN street_mode_row_width_mode_ft s_row_width_mode_ft USING (full_name)
+LEFT JOIN street_mode_functional_class  s_functional_class  USING (full_name)
+LEFT JOIN street_mode_maint_resp        s_maint_resp        USING (full_name)
 -- Unnamed segments (NULL or blank in the source) roll up to nothing useful;
 -- they stay in street_segment, just not in the per-street summary.
 WHERE full_name IS NOT NULL AND trim(full_name) <> ''

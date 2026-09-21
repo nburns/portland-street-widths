@@ -36,8 +36,9 @@ COPY (
 ) TO 'site/public/data/blocks.geojson'
   WITH (FORMAT GDAL, DRIVER 'GeoJSON', SRS 'EPSG:4326');
 
--- Narrowings from the curb profile (sql/11): one point per run, at its
--- narrowest station. Nothing in PBOT's pavement records can see these.
+-- Narrowings from the curb profile (sql/11): the stretch of street each one
+-- occupies, not a marker beside it. Nothing in PBOT's pavement records can
+-- see these at all.
 COPY (
   SELECT
     pinch_id         AS pid,

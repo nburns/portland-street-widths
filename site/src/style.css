@@ -31,7 +31,7 @@ a { color: #14607e; }
   margin: 1.5rem 0;
 }
 fieldset {
-  flex: 1 1 13rem;
+  flex: 1 1 15rem;
   border: 1px solid #ccc;
   padding: 0.6rem 0.8rem 0.8rem;
   margin: 0;
@@ -39,11 +39,13 @@ fieldset {
 legend { font-size: 0.9rem; padding: 0 0.3rem; }
 fieldset label { display: block; }
 legend label { display: inline; }
-input[type=range] { width: 8rem; vertical-align: middle; }
+input[type=range] { width: 7rem; vertical-align: middle; }
 output { font-variant-numeric: tabular-nums; font-weight: 600; }
+select { font: inherit; font-size: 0.9rem; }
 /* a switched-off test stays readable but stops asking for attention */
-fieldset:has(> legend > label > input:not(:checked)) input[type=range],
-fieldset:has(> legend > label > input:not(:checked)) output { opacity: 0.45; }
+fieldset:has(> legend > label > input:not(:checked)) :is(input[type=range], output, select) {
+  opacity: 0.45;
+}
 
 /* map: wider than the prose, because it is the thing being read */
 #map {

@@ -71,12 +71,15 @@ export function renderReadout({ block, narrowing }) {
 }
 
 export function renderControls(state) {
-  $("thrMax").value = String(state.maxThr);
-  $("maxVal").textContent = String(state.maxThr);
-  $("thrMin").value = String(state.minThr);
-  $("minVal").textContent = String(state.minThr);
-  $("useMax").checked = state.useMax;
-  $("useMin").checked = state.useMin;
+  $("thrWhole").value = String(state.wholeVal);
+  $("wholeVal").textContent = String(state.wholeVal);
+  $("opWhole").value = state.wholeOp;
+  $("useWhole").checked = state.wholeOn;
+
+  $("thrPart").value = String(state.partVal);
+  $("partVal").textContent = String(state.partVal);
+  $("opPart").value = state.partOp;
+  $("usePart").checked = state.partOn;
 }
 
 export function renderNotes(totals) {

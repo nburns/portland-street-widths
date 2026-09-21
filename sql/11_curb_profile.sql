@@ -431,14 +431,29 @@ WITH f AS (
     max(ft_along)                                                 AS end_ft,
     max(ft_along) - min(ft_along) + getvariable('spacing')::DOUBLE AS run_len_ft,
     min(roadway_ft)                                               AS min_gap_ft,
-    arg_min(cx, roadway_ft)                                       AS cx,
-    arg_min(cy, roadway_ft)                                       AS cy,
     arg_min(left_curb_style, roadway_ft)                          AS left_curb_style,
     arg_min(right_curb_style, roadway_ft)                         AS right_curb_style,
     bool_or(flag_shoulder_edge)                                   AS any_shoulder_edge
   FROM marked WHERE narrow GROUP BY street_oid, grp
   HAVING max(ft_along) - min(ft_along) + getvariable('spacing')::DOUBLE
          >= getvariable('minrun')::DOUBLE
+), run_geom AS (
+  -- The narrowing IS the stretch, so it is stored as the stretch: the run's
+  -- own stations, in order along the street. A point at the narrowest station
+  -- threw the extent away, and the extent is most of the information - a 20 ft
+  -- pinch between two planters and a 390 ft run of genuinely narrow street are
+  -- not the same finding. The block is the wrong unit in the other direction:
+  -- the median run is 20 ft inside a 272 ft block.
+  --
+  -- Built after `runs` rather than inside it: HAVING is applied after the
+  -- aggregates are computed, so a one-station group still reached ST_MakeLine,
+  -- which rejects a single point. Joining to the already-filtered runs means
+  -- every group here has at least three stations.
+  SELECT m.street_oid, m.grp,
+         ST_MakeLine(list(ST_Point(m.cx, m.cy) ORDER BY m.ft_along)) AS geom
+  FROM marked m JOIN runs r USING (street_oid, grp)
+  WHERE m.narrow
+  GROUP BY m.street_oid, m.grp
 )
 SELECT
   row_number() OVER (ORDER BY r.street_oid, r.start_ft) AS pinch_id,
@@ -451,8 +466,9 @@ SELECT
   round(w.curb_median_outer_ft - r.min_gap_ft, 1)       AS narrowing_ft,
   s.functional_class, s.type_code,
   r.left_curb_style, r.right_curb_style, r.any_shoulder_edge,
-  ST_Point(r.cx, r.cy)                                  AS geom
+  g.geom
 FROM runs r
+JOIN run_geom g USING (street_oid, grp)
 JOIN street_segment s USING (street_oid)
 LEFT JOIN block_member   m USING (street_oid)
 LEFT JOIN seg_curb_width w USING (street_oid);
@@ -720,7 +736,7 @@ COPY (
          left_curb_style, right_curb_style, any_shoulder_edge,
          ST_Transform(geom, 'EPSG:2913', 'EPSG:4326', always_xy := true) AS geom
   FROM curb_pinch ORDER BY narrowing_ft DESC, pinch_id
-) TO 'out/curb_pinch_points.geojson'
+) TO 'out/curb_narrowings.geojson'
   WITH (FORMAT GDAL, DRIVER 'GeoJSON', SRS 'EPSG:4326');
 
 -- Large and rebuildable; the profile tables above are what downstream reads.

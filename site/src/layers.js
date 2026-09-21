@@ -70,38 +70,42 @@ export function addDataLayers(map, blocksData) {
     paint: { "line-color": "#1b1b1b", "line-width": lineWidth(4.6), "line-opacity": 0.9 },
   });
 
+  // Drawn as a line over the street it narrows, because that is its actual
+  // shape. It sits above the width ramp so a narrowing on a drawn block reads
+  // as emphasis on that block rather than as a separate object, and it still
+  // shows on streets the width filter excludes - a narrowing on a 30 ft street
+  // is exactly the interesting case.
   map.addLayer({
     id: LYR.narrowings,
-    type: "circle",
+    type: "line",
     source: SRC.narrowings,
-    layout: { visibility: "none" },
+    layout: { visibility: "none", "line-cap": "round" },
     paint: {
-      // radius carries how much narrower, which is the quantity that says
-      // whether a narrowing is a planter or a rounding error
-      "circle-radius": [
-        "interpolate", ["linear"], ["zoom"],
-        10, ["interpolate", ["linear"], ["get", "d"], 3, 1.8, 30, 4.5],
-        16, ["interpolate", ["linear"], ["get", "d"], 3, 5, 30, 13],
-      ],
-      "circle-color": PINCH,
-      "circle-opacity": 0.9,
-      "circle-stroke-color": "#1b1b1b",
-      "circle-stroke-width": ["case", ["boolean", ["feature-state", "hover"], false], 1.6, 0],
+      "line-color": PINCH,
+      "line-width": lineWidth(3.4),
+      "line-opacity": 0.85,
     },
   });
 }
 
-// The two competing readings of "not more than 18 feet wide at any point".
-// Widest-at-most is a block that is never wider than T; narrowest-at-most is a
-// block that drops to T somewhere. Independent tests, so a block draws when
-// every enabled one passes, and with both off everything in the source draws.
-export function blockFilter({ useMax, maxThr, useMin, minThr }) {
+// The same predicate as blocks.js `passes`, expressed for MapLibre. Kept in
+// step with it by construction: both read the same four cases off bm and bn.
+export function blockFilter(st) {
   const clauses = ["all"];
-  if (useMax) clauses.push(["<=", ["get", "bm"], maxThr]);
-  if (useMin) clauses.push(["<=", ["get", "bn"], minThr]);
+  if (st.wholeOn)
+    clauses.push(st.wholeOp === "le"
+      ? ["<=", ["get", "bm"], st.wholeVal]
+      : [">=", ["get", "bm"], st.wholeVal]);
+  if (st.partOn)
+    clauses.push(st.partOp === "le"
+      ? ["<=", ["get", "bn"], st.partVal]
+      : [">=", ["get", "bn"], st.partVal]);
   return clauses.length === 1 ? ["literal", true] : clauses;
 }
 
-export function excludedFilter({ maxThr }) {
-  return ["all", [">", ["get", "bm"], maxThr], ["<=", ["get", "sm"], maxThr]];
+// Segments narrow enough on their own, in blocks that widen somewhere else -
+// only meaningful against a whole-block-at-most test, which is what it is the
+// complement of. main.js hides it otherwise.
+export function excludedFilter(st) {
+  return ["all", [">", ["get", "bm"], st.wholeVal], ["<=", ["get", "sm"], st.wholeVal]];
 }

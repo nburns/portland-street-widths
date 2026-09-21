@@ -149,8 +149,8 @@ residential cross-section, recovered from the data rather than assumed.
 
 The width distribution lands where Portland's plats say it should: 60 ft on
 11,974 segments (754 miles), 50 ft on 7,665 (555 miles), then 80 ft and 40 ft.
-Among high-confidence segments the modal widths are 60 ft (9,286), 50 ft (4,916),
-80 ft (865) and 40 ft (715) — round platted numbers, not a smear.
+Among high-confidence segments the modal widths are 60 ft (9,288), 50 ft (4,915),
+80 ft (865) and 40 ft (717) — round platted numbers, not a smear.
 
 **The centerline is not reliably centred in the right of way.** 54.5% of
 segments sit within 1 ft of centre, but 12.7% are off by more than 10 ft. That
@@ -320,15 +320,21 @@ opposite about parking, and that disagreement is not resolved here.
 
 ### Narrowings
 
-`out/curb_pinch_points.geojson` inventories 783 places where a street is
+`out/curb_narrowings.geojson` inventories 783 places where a street is
 materially narrower than itself: at least 3 ft under its own median, no wider
 than 24 ft, running at least 10 ft, bounded by street curb on both sides. The
 criterion is relative because an absolute one fails in both directions — a
 20 ft cut misses the SE Taylor bioswales at 20.3 ft while admitting freeway
 ramps that drop from 60 ft to 8 ft at a gore curb.
 
-338 are on locally classified streets. 150 reach 18 ft or less. The map has
-them on a toggle.
+338 are on locally classified streets. 150 reach 18 ft or less. The map draws
+each one as the stretch of street it occupies, on a toggle.
+
+The map's two filters test opposite ends of a block's width profile, each in
+either direction: **whole block** is its widest point, **narrow part** its
+narrowest. That makes the conversion question askable directly - *whole block
+at least 19 ft* with *narrow part at most 18 ft* is 165 blocks over 21.4 miles
+that are too wide to qualify except where something already narrows them.
 
 ### Outputs
 
@@ -336,8 +342,10 @@ them on a toggle.
 `out/curb_profile_by_block.csv` — per block: the five-number width summary,
 `edge_quality`, station counts by edge type, the edge-line arithmetic, and
 `width_test_18ft` / `confident_18ft`.
-`out/curb_pinch_points.geojson` — one point per narrowing, at its narrowest
-station.
+`out/curb_narrowings.geojson` — one line per narrowing, covering the stretch
+of street it occupies rather than marking it with a point. The extent is most
+of the information: a 20 ft pinch between two planters and a 390 ft run of
+genuinely narrow street are different findings.
 
 ## Confidence
 

@@ -1,3 +1,9 @@
+# Without pipefail a stage piped into `tee` reports tee's status, so a SQL
+# error printed to stderr still looked like a successful build - stage 11 once
+# failed mid-script and left a stale table behind while make exited 0.
+SHELL      := /bin/bash
+.SHELLFLAGS := -o pipefail -c
+
 DB     := data/street_widths.duckdb
 DUCKDB := duckdb
 STAMP  := .stamps

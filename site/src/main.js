@@ -10,10 +10,8 @@ import { renderSummary, renderReadout, renderControls, renderNotes, onBinClick }
 const PORTLAND = { center: [-122.658, 45.522], zoom: 10.6 };
 
 const state = {
-  maxThr: 18,
-  minThr: 18,
-  useMax: true,
-  useMin: false,
+  wholeOn: true, wholeOp: "le", wholeVal: 18,   // every point <= 18 ft
+  partOn: false, partOp: "le", partVal: 18,     // some point <= 18 ft
   showExcluded: false,
   showPinch: false,
   showBasemap: true,
@@ -113,10 +111,11 @@ function applyFilters() {
   if (!map.getLayer(LYR.blocks)) return;
   map.setFilter(LYR.blocks, blockFilter(state));
   map.setFilter(LYR.excluded, excludedFilter(state));
+  // the complement of a whole-block-at-most test, so it means nothing without one
   map.setLayoutProperty(
     LYR.excluded,
     "visibility",
-    state.showExcluded && state.useMax ? "visible" : "none"
+    state.showExcluded && state.wholeOn && state.wholeOp === "le" ? "visible" : "none"
   );
   map.setLayoutProperty(LYR.narrowings, "visibility", state.showPinch ? "visible" : "none");
   map.setFilter(
@@ -136,10 +135,12 @@ function refresh() {
 function wireEvents(blocksGeojson) {
   const on = (id, ev, fn) => document.getElementById(id).addEventListener(ev, fn);
 
-  on("thrMax", "input", (e) => { state.maxThr = +e.target.value; state.useMax = true; refresh(); });
-  on("thrMin", "input", (e) => { state.minThr = +e.target.value; state.useMin = true; refresh(); });
-  on("useMax", "change", (e) => { state.useMax = e.target.checked; refresh(); });
-  on("useMin", "change", (e) => { state.useMin = e.target.checked; refresh(); });
+  on("thrWhole", "input", (e) => { state.wholeVal = +e.target.value; state.wholeOn = true; refresh(); });
+  on("thrPart", "input", (e) => { state.partVal = +e.target.value; state.partOn = true; refresh(); });
+  on("opWhole", "change", (e) => { state.wholeOp = e.target.value; state.wholeOn = true; refresh(); });
+  on("opPart", "change", (e) => { state.partOp = e.target.value; state.partOn = true; refresh(); });
+  on("useWhole", "change", (e) => { state.wholeOn = e.target.checked; refresh(); });
+  on("usePart", "change", (e) => { state.partOn = e.target.checked; refresh(); });
   on("togExcluded", "change", (e) => { state.showExcluded = e.target.checked; refresh(); });
   on("togPinch", "change", (e) => {
     state.showPinch = e.target.checked;
@@ -148,12 +149,12 @@ function wireEvents(blocksGeojson) {
   });
   on("togBasemap", "change", (e) => setBasemap(e.target.checked, blocksGeojson));
 
-  // Clicking a legend row drives whichever test is active. With only the
-  // narrowest-point test on it would otherwise silently move a control the
-  // reader has switched off.
+  // A legend row is a whole-block maximum, so it drives that control and says
+  // so by switching it on rather than moving something invisible.
   onBinClick((v) => {
-    if (state.useMax || !state.useMin) { state.useMax = true; state.maxThr = Math.min(24, v); }
-    else state.minThr = Math.min(24, v);
+    state.wholeOn = true;
+    state.wholeOp = "le";
+    state.wholeVal = Math.min(40, v);
     refresh();
   });
 

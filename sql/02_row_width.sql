@@ -197,6 +197,20 @@ FROM m;
 -- driveway apron, a corner clip or a missing lot; the spread across transects
 -- is the confidence signal, and the mode of the rounded widths recovers the
 -- platted figure when a minority of transects are noisy.
+-- Modal rounded width per segment, resolved deterministically. `mode()` picks
+-- among equally-common values by whichever row a parallel aggregate finished
+-- first: on a segment where 60 ft and 61 ft each won three transects, the
+-- platted figure reported was a coin flip, and it moved the modal-width table
+-- in out/validation.txt between runs. Most common wins; ties go to the
+-- narrower value, which is the conservative reading of a right of way.
+CREATE OR REPLACE TABLE row_width_mode AS
+SELECT street_oid, w AS row_width_mode_ft FROM (
+  SELECT street_oid, round(width_ft) AS w, count(*) AS n,
+         row_number() OVER (PARTITION BY street_oid ORDER BY count(*) DESC, round(width_ft)) AS rn
+  FROM transect_width WHERE width_ft IS NOT NULL
+  GROUP BY street_oid, round(width_ft)
+) WHERE rn = 1;
+
 CREATE OR REPLACE TABLE row_width AS
 SELECT
   street_oid,
@@ -204,7 +218,7 @@ SELECT
   count(width_ft)                              AS n_measured,
   count(width_any_ft)                          AS n_any,
   round(median(width_ft), 1)                   AS row_width_ft,
-  mode(round(width_ft))                        AS row_width_mode_ft,
+  any_value(m.row_width_mode_ft)               AS row_width_mode_ft,
   round(min(width_ft), 1)                      AS row_width_min_ft,
   round(max(width_ft), 1)                      AS row_width_max_ft,
   round(max(width_ft) - min(width_ft), 1)      AS row_width_spread_ft,
@@ -218,6 +232,7 @@ SELECT
   count(*) FILTER (WHERE status = 'no_lot_one_side')      AS n_one_side,
   count(*) FILTER (WHERE edge_at_cap)                     AS n_at_cap
 FROM transect_width
+LEFT JOIN row_width_mode m USING (street_oid)
 GROUP BY street_oid;
 
 SELECT status, count(*) AS transects,

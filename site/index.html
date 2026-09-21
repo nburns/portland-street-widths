@@ -25,22 +25,32 @@
 <form id="controls" onsubmit="return false">
   <fieldset>
     <legend>
-      <label><input type="checkbox" id="useMax" checked> Widest point at most</label>
+      <label><input type="checkbox" id="useWhole" checked> Whole block</label>
     </legend>
-    <input type="range" id="thrMax" min="12" max="24" step="1" value="18"
-           aria-label="Widest point at most, in feet">
-    <output id="maxVal">18</output> ft
-    <p class="hint">The block is never wider than this.</p>
+    <select id="opWhole" aria-label="Whole block comparison">
+      <option value="le" selected>at most</option>
+      <option value="ge">at least</option>
+    </select>
+    <input type="range" id="thrWhole" min="10" max="40" step="1" value="18"
+           aria-label="Whole block width in feet">
+    <output id="wholeVal">18</output> ft
+    <p class="hint">Tests the block's <em>widest</em> point, so “at most”
+      means never wider &mdash; the statutory reading.</p>
   </fieldset>
 
   <fieldset>
     <legend>
-      <label><input type="checkbox" id="useMin"> Narrowest point at most</label>
+      <label><input type="checkbox" id="usePart"> Narrow part</label>
     </legend>
-    <input type="range" id="thrMin" min="12" max="24" step="1" value="18"
-           aria-label="Narrowest point at most, in feet">
-    <output id="minVal">18</output> ft
-    <p class="hint">The block drops to this somewhere.</p>
+    <select id="opPart" aria-label="Narrow part comparison">
+      <option value="le" selected>at most</option>
+      <option value="ge">at least</option>
+    </select>
+    <input type="range" id="thrPart" min="10" max="40" step="1" value="18"
+           aria-label="Narrow part width in feet">
+    <output id="partVal">18</output> ft
+    <p class="hint">Tests the block's <em>narrowest</em> point, so “at most”
+      means it drops to this somewhere.</p>
   </fieldset>
 
   <fieldset>
@@ -60,9 +70,11 @@
       <thead><tr><th>Width</th><th>Miles</th></tr></thead>
       <tbody></tbody>
     </table>
-    <p class="hint">Darker is narrower. Click a row to set the widest-point
-      slider. Both tests are independent, and a block draws when every enabled
-      one passes.</p>
+    <p class="hint">Darker is narrower. Click a row to set the whole-block
+      slider. The two tests are independent and a block draws when every
+      enabled one passes, so <em>whole block at least 19</em> with
+      <em>narrow part at most 18</em> finds streets too wide to qualify
+      except where something already narrows them.</p>
   </div>
 
   <div>

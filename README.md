@@ -1,5 +1,7 @@
 # Portland right-of-way widths
 
+**Map: [nburns.github.io/portland-street-widths](https://nburns.github.io/portland-street-widths/)**
+
 The platted right-of-way width — the corridor between property lines — for every
 street segment in Portland, Oregon, in a local DuckDB database.
 
@@ -47,8 +49,9 @@ changed. `make clean-db` drops the database and `out/`, keeping the downloads.
 
 ## The site
 
-`site/` is a Vite build of the map on MapLibre GL JS, published to GitHub Pages
-by `.github/workflows/pages.yml` on every push that touches it.
+`site/` is a Vite build of the map on MapLibre GL JS, live at
+**[nburns.github.io/portland-street-widths](https://nburns.github.io/portland-street-widths/)**
+and published by `.github/workflows/pages.yml` on every push that touches it.
 
 ```sh
 make site-data     # regenerate site/public/data/*.geojson from the database

@@ -39,7 +39,7 @@ def load(name):
     path = os.path.join(BUILD, f"{name}.json")
     if not os.path.exists(path):
         sys.exit(f"missing {path} - run sql/07_map_export.sql first (make map)")
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -51,6 +51,7 @@ def main():
             {
                 "n": r["full_name"] or "(unnamed)",
                 "bm": r["block_max"],
+                "bn": r["block_min"],
                 "bl": int(r["block_len"]),
                 "s": [],
             },
@@ -64,14 +65,26 @@ def main():
             }
         )
 
+    # Narrowings: parallel arrays rather than a list of objects, because the
+    # coordinates are projected in place by the same routine that projects the
+    # line layers and the attributes never need to move with them.
+    pinch = load("pinch")
     data = {
         "blocks": list(blocks.values()),
         # Context layers carry less precision; they are never measured against.
         "major": [p for r in load("major") for p in flatten(rings(r["g"]), 4)],
         "boundary": [p for r in load("boundary") for p in flatten(rings(r["g"]), 4)],
+        "pinch": {
+            "p": [v for r in pinch for v in (r["lon"], r["lat"])],
+            "w": [r["w"] for r in pinch],
+            "l": [r["l"] for r in pinch],
+            "d": [r["d"] for r in pinch],
+            "s": [r["s"] for r in pinch],
+            "n": [r["n"] for r in pinch],
+        },
     }
 
-    with open(TEMPLATE) as f:
+    with open(TEMPLATE, encoding="utf-8") as f:
         html = f.read()
     if "__DATA__" not in html:
         sys.exit(f"{TEMPLATE} has no __DATA__ placeholder")
@@ -81,7 +94,7 @@ def main():
         sys.exit("payload would close the host script tag")
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    with open(OUT, "w") as f:
+    with open(OUT, "w", encoding="utf-8") as f:
         f.write(html.replace("__DATA__", payload))
 
     miles = {}
@@ -91,6 +104,7 @@ def main():
 
     print(f"wrote {OUT} ({os.path.getsize(OUT):,} bytes)")
     print(f"  {len(data['blocks']):,} blocks, {len(data['major']):,} context lines")
+    print(f"  {len(pinch):,} narrowings ({len(json.dumps(data['pinch'])):,} bytes inlined)")
     for t, (n, mi) in miles.items():
         print(f"  <= {t} ft: {n:5,} blocks {mi:7.1f} mi")
 

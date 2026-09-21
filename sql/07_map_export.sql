@@ -4,13 +4,17 @@
 LOAD spatial;
 SET geometry_always_xy = true;
 
--- Every segment at or under 24 ft, carrying its block's maximum so the
--- threshold can be moved in the browser: a block qualifies at T when
--- block_max <= T. Restricted to blocks with no width gaps - the testable set.
+-- Every segment at or under 24 ft, carrying its block's maximum AND minimum so
+-- both thresholds can be moved in the browser: a block passes the widest-point
+-- test at T when block_max <= T, and the narrowest-point test when
+-- block_min <= T. The two are the competing readings of "not more than 18 feet
+-- wide at any point". Restricted to blocks with no width gaps - the testable
+-- set.
 COPY (
   SELECT
     b.block_id, b.full_name,
     b.road_width_max_ft   AS block_max,
+    b.road_width_min_ft   AS block_min,
     round(b.portland_len_ft) AS block_len,
     s.street_oid,
     round(s.len_ft)       AS seg_len,
@@ -22,7 +26,11 @@ COPY (
   FROM narrow_block b
   JOIN block_member m USING (block_id)
   JOIN street_segment s USING (street_oid)
-  WHERE s.road_width_max_ft <= 24 OR b.road_width_max_ft <= 24
+  -- block_min pulls in blocks that are narrow somewhere but widen past 24 ft
+  -- elsewhere: 295 blocks, 39.8 miles, invisible to a widest-point test.
+  WHERE s.road_width_max_ft <= 24
+     OR b.road_width_max_ft <= 24
+     OR b.road_width_min_ft <= 24
 ) TO 'build/segs.json' (FORMAT JSON, ARRAY true);
 
 -- Context only: arterials, collectors, freeways and ramps.
@@ -38,6 +46,26 @@ COPY (
                       'EPSG:2913', 'EPSG:4326', always_xy := true)) AS g
   FROM city_boundary
 ) TO 'build/boundary.json' (FORMAT JSON, ARRAY true);
+
+-- Narrowings from the curb profile (sql/11): places where a street is
+-- materially narrower than itself. PBOT's pavement records carry one width per
+-- section and cannot see these at all, which is the whole point of the layer.
+-- One point per run, placed at its narrowest station.
+COPY (
+  SELECT
+    round(ST_X(g), 5) AS lon,
+    round(ST_Y(g), 5) AS lat,
+    min_gap_ft        AS w,
+    run_len_ft        AS l,
+    narrowing_ft      AS d,
+    seg_median_ft     AS s,
+    coalesce(full_name, '(unnamed)') AS n
+  FROM (
+    SELECT ST_Transform(geom, 'EPSG:2913', 'EPSG:4326', always_xy := true) AS g,
+           min_gap_ft, run_len_ft, narrowing_ft, seg_median_ft, full_name
+    FROM curb_pinch
+  )
+) TO 'build/pinch.json' (FORMAT JSON, ARRAY true);
 
 -- A plain GeoJSON of the answer, for geojson.io, a gist, QGIS or a tile build.
 COPY (

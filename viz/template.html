@@ -1,3 +1,8 @@
+<!-- Must come first and inside the first 1024 bytes. Without it a file://
+     load has no charset to go on and falls back to the locale default, which
+     turns the legend's ≤ and en dashes into mojibake. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Portland's Narrow Streets</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -141,6 +146,14 @@ canvas.dragging { cursor: grabbing; }
 }
 
 /* threshold control */
+.thr-head { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.thr-head .eyebrow { margin: 0; }
+.thr-head input { accent-color: #68cfd6; margin: 0; }
+.thr-head:focus-within { outline: 2px solid #97e4e6; outline-offset: 3px; border-radius: 2px; }
+.thr-group-2 { margin-top: 15px; }
+/* a disabled test stays legible but stops competing for attention */
+.thr-off .thr-val, .thr-off input[type=range], .thr-off .thr-scale { opacity: .38; }
+
 .thr-val {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
@@ -168,6 +181,10 @@ input[type=range]:focus-visible { outline: 2px solid #97e4e6; outline-offset: 3p
   font-size: 11px;
 }
 .legend-note { font-size: 11px; color: var(--on-canvas-muted); margin-top: 8px; line-height: 1.4; }
+.pinch-key {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: #c9a7f5; vertical-align: middle;
+}
 
 /* toggles */
 .toggles { margin-top: 13px; display: grid; gap: 7px; }
@@ -266,21 +283,37 @@ footer a { color: var(--muted); }
     <canvas id="map"></canvas>
 
     <div class="panel panel-tl">
-      <p class="eyebrow">Maximum roadway width</p>
-      <div class="thr-val"><span id="thrVal">18</span> ft</div>
-      <input type="range" id="thr" min="12" max="24" step="1" value="18"
-             aria-label="Maximum roadway width in feet">
-      <div class="thr-scale"><span>12</span><span>18</span><span>24</span></div>
+      <div class="thr-group" id="grpMax">
+        <label class="thr-head"><input type="checkbox" id="useMax" checked>
+          <span class="eyebrow">Widest point at most</span></label>
+        <div class="thr-val"><span id="maxVal">18</span> ft</div>
+        <input type="range" id="thrMax" min="12" max="24" step="1" value="18"
+               aria-label="Widest point at most, in feet">
+        <div class="thr-scale"><span>12</span><span>18</span><span>24</span></div>
+      </div>
+
+      <div class="thr-group thr-group-2 thr-off" id="grpMin">
+        <label class="thr-head"><input type="checkbox" id="useMin">
+          <span class="eyebrow">Narrowest point at most</span></label>
+        <div class="thr-val"><span id="minVal">18</span> ft</div>
+        <input type="range" id="thrMin" min="12" max="24" step="1" value="18"
+               aria-label="Narrowest point at most, in feet">
+        <div class="thr-scale"><span>12</span><span>18</span><span>24</span></div>
+      </div>
 
       <div class="legend" id="legend"></div>
-      <p class="legend-note">Lighter is narrower. A block is drawn only when it
-        stays at or under the threshold along its whole length.</p>
+      <p class="legend-note">Lighter is narrower, keyed to the widest point. The
+        two tests are independent: <em>widest at most</em> is a block that never
+        exceeds the figure, <em>narrowest at most</em> is one that drops to it
+        somewhere. A block is drawn when every enabled test passes.</p>
 
       <div class="toggles">
         <label class="tog"><input type="checkbox" id="togExcluded">
           <span class="dash-key"></span> Narrow but block widens</label>
         <label class="tog"><input type="checkbox" id="togContext" checked>
           Arterials for context</label>
+        <label class="tog"><input type="checkbox" id="togPinch">
+          <span class="pinch-key"></span> Narrowings</label>
       </div>
     </div>
 
@@ -355,9 +388,15 @@ footer a { color: var(--muted); }
     { max: 18, color: "#68cfd6", label: "17–18" },
     { max: 20, color: "#4cb0ba", label: "19–20" },
     { max: 22, color: "#3e8f99", label: "21–22" },
-    { max: 24, color: "#33707a", label: "23–24" }
+    { max: 24, color: "#33707a", label: "23–24" },
+    // reachable only through the narrowest-point test: a block that drops to
+    // the threshold somewhere but widens past the top of the scale elsewhere
+    { max: Infinity, color: "#27545c", label: "> 24" }
   ];
   const CANVAS = "#0b1418", CTX = "#24343b", BORDER = "#35505a", EXCLUDED = "#e0a340";
+  // Narrowings are a third kind of thing - a point, not a width and not an
+  // exclusion state - so they get a hue outside both existing scales.
+  const PINCH = "#c9a7f5";
 
   const binFor = (w) => BINS.find((b) => w <= b.max) || BINS[BINS.length - 1];
 
@@ -382,6 +421,7 @@ footer a { color: var(--muted); }
     DATA.boundary.forEach(seen);
     DATA.major.forEach(seen);
     DATA.blocks.forEach((b) => b.s.forEach((s) => s.p.forEach(seen)));
+    seen(DATA.pinch.p);
     return { x0, y0, x1, y1 };
   }
   const EXT = projectAll();
@@ -413,7 +453,17 @@ footer a { color: var(--muted); }
   const g = cv.getContext("2d");
   const view = { k: 1, tx: 0, ty: 0 };   // applied on top of the fit transform
   let fit = { s: 1, ox: 0, oy: 0 }, W = 0, H = 0, dpr = 1;
-  let threshold = 18, showExcluded = false, showContext = true, hover = null;
+  let maxThr = 18, minThr = 18, useMax = true, useMin = false;
+  let showExcluded = false, showContext = true, hover = null;
+  let showPinch = false, hoverPinch = null;
+
+  // The two competing readings of "not more than 18 feet wide at any point".
+  // Widest-at-most is a block that is never wider than T; narrowest-at-most is
+  // a block that drops to T somewhere. They are independent tests, so a block
+  // shows when every enabled one passes, and with both off everything in the
+  // payload shows.
+  const passes = (b) =>
+    (!useMax || b.bm <= maxThr) && (!useMin || b.bn <= minThr);
 
   function resize() {
     const r = cv.getBoundingClientRect();
@@ -463,13 +513,15 @@ footer a { color: var(--muted); }
 
     const lw = Math.max(1.35, 2.1 * Math.sqrt(view.k));
 
-    if (showExcluded) {
+    if (showExcluded && useMax) {
       g.strokeStyle = EXCLUDED;
       g.setLineDash([4, 3]);
+      // only meaningful against the widest-point test: it is the segments a
+      // block-level maximum throws away
       const parts = [];
       for (const b of DATA.blocks) {
-        if (b.bm <= threshold) continue;
-        for (const s of b.s) if (s.m <= threshold) parts.push(...s.p);
+        if (b.bm <= maxThr) continue;
+        for (const s of b.s) if (s.m <= maxThr) parts.push(...s.p);
       }
       strokeParts(parts, lw);
       g.setLineDash([]);
@@ -481,12 +533,32 @@ footer a { color: var(--muted); }
       const lo = bi === 0 ? 0 : BINS[bi - 1].max;
       const parts = [];
       for (const b of DATA.blocks) {
-        if (b.bm > threshold || b.bm <= lo || b.bm > bin.max) continue;
+        if (!passes(b) || b.bm <= lo || b.bm > bin.max) continue;
         for (const s of b.s) parts.push(...s.p);
       }
       if (!parts.length) continue;
       g.strokeStyle = bin.color;
       strokeParts(parts, lw);
+    }
+
+    if (showPinch) {
+      const P = DATA.pinch;
+      g.fillStyle = PINCH;
+      for (let i = 0; i < P.w.length; i++) {
+        // radius carries how much narrower, which is the quantity that says
+        // whether a narrowing is a planter or a rounding error
+        const r = Math.min(6, 2 + P.d[i] / 6) * Math.min(2, Math.sqrt(view.k));
+        g.beginPath();
+        g.arc(sx(P.p[i * 2]), sy(P.p[i * 2 + 1]), r, 0, Math.PI * 2);
+        g.fill();
+      }
+      if (hoverPinch !== null) {
+        g.strokeStyle = "#ffffff";
+        g.lineWidth = 1.5;
+        g.beginPath();
+        g.arc(sx(P.p[hoverPinch * 2]), sy(P.p[hoverPinch * 2 + 1]), 7, 0, Math.PI * 2);
+        g.stroke();
+      }
     }
 
     if (hover !== null) {
@@ -519,7 +591,7 @@ footer a { color: var(--muted); }
       const a = index.get(cellKey(cx + dx, cy + dy));
       if (!a) continue;
       for (const [bi, si, part, i] of a) {
-        if (DATA.blocks[bi].bm > threshold) continue;
+        if (!passes(DATA.blocks[bi])) continue;
         const d = distToSeg(mx, my, part[i], part[i + 1], part[i + 2], part[i + 3]);
         if (d < bestD) { bestD = d; best = bi; }
       }
@@ -527,8 +599,33 @@ footer a { color: var(--muted); }
     return bestD <= tol ? best : null;
   }
 
+  function pickPinch(px, py) {
+    if (!showPinch) return null;
+    const P = DATA.pinch;
+    let best = null, bestD = 10;
+    for (let i = 0; i < P.w.length; i++) {
+      const dx = sx(P.p[i * 2]) - px, dy = sy(P.p[i * 2 + 1]) - py;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    return best;
+  }
+
   const readout = document.getElementById("readout");
   function renderReadout() {
+    if (hoverPinch !== null) {
+      const P = DATA.pinch, i = hoverPinch;
+      readout.innerHTML =
+        '<p class="eyebrow">Narrowing</p>' +
+        '<p class="readout-name">' + esc(P.n[i]) + "</p>" +
+        '<dl class="readout-grid">' +
+        "<dt>Narrowest</dt><dd>" + P.w[i] + " ft</dd>" +
+        "<dt>Street elsewhere</dt><dd>" + P.s[i] + " ft</dd>" +
+        "<dt>Narrower by</dt><dd>" + P.d[i] + " ft</dd>" +
+        "<dt>Runs for</dt><dd>" + P.l[i] + " ft</dd>" +
+        "</dl>";
+      return;
+    }
     if (hover === null) {
       readout.innerHTML = '<p class="eyebrow">Block detail</p>' +
         '<p class="readout-empty">Point at a highlighted block.</p>';
@@ -536,8 +633,8 @@ footer a { color: var(--muted); }
     }
     const b = DATA.blocks[hover];
     const rows = [
-      ["Roadway max", b.bm + " ft"],
-      ["Roadway min", Math.min(...b.s.map((s) => s.m)) + " ft"],
+      ["Widest point", b.bm + " ft"],
+      ["Narrowest point", b.bn + " ft"],
       ["Block length", b.bl.toLocaleString() + " ft"],
       ["Segments", String(b.s.length)]
     ];
@@ -555,14 +652,20 @@ footer a { color: var(--muted); }
   // ---- summary + legend + histogram ----
   const fmt1 = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
+  // Counted over the blocks currently drawn rather than over the whole
+  // payload, because with two independent tests no bin is wholly in or out:
+  // a 23-24 ft bin can contain blocks that pass on their minimum and blocks
+  // that do not. The panel therefore always reports what is on screen.
   function binStats() {
     return BINS.map((bin, i) => {
       const lo = i === 0 ? 0 : BINS[i - 1].max;
-      let miles = 0, blocks = 0;
+      let miles = 0, blocks = 0, total = 0;
       for (const b of DATA.blocks) {
-        if (b.bm > lo && b.bm <= bin.max) { miles += b.bl / 5280; blocks++; }
+        if (b.bm <= lo || b.bm > bin.max) continue;
+        total += b.bl / 5280;
+        if (passes(b)) { miles += b.bl / 5280; blocks++; }
       }
-      return { bin, miles, blocks, active: bin.max <= threshold };
+      return { bin, miles, blocks, total, active: blocks > 0 };
     });
   }
 
@@ -582,7 +685,7 @@ footer a { color: var(--muted); }
       '<span class="legend-num">' + fmt1(s.miles) + " mi</span></div>"
     ).join("");
 
-    const peak = Math.max(...stats.map((s) => s.miles));
+    const peak = Math.max(...stats.map((s) => s.total));
     document.getElementById("bars").innerHTML = stats.map((s) =>
       '<button class="bar-row" type="button" aria-pressed="' + s.active +
       '" data-w="' + s.bin.max + '">' +
@@ -596,22 +699,53 @@ footer a { color: var(--muted); }
     });
   }
 
-  function setThreshold(v) {
-    threshold = v;
-    document.getElementById("thr").value = String(v);
-    document.getElementById("thrVal").textContent = String(v);
-    if (hover !== null && DATA.blocks[hover].bm > threshold) { hover = null; renderReadout(); }
+  function refresh() {
+    document.getElementById("thrMax").value = String(maxThr);
+    document.getElementById("maxVal").textContent = String(maxThr);
+    document.getElementById("thrMin").value = String(minThr);
+    document.getElementById("minVal").textContent = String(minThr);
+    document.getElementById("useMax").checked = useMax;
+    document.getElementById("useMin").checked = useMin;
+    document.getElementById("grpMax").classList.toggle("thr-off", !useMax);
+    document.getElementById("grpMin").classList.toggle("thr-off", !useMin);
+    if (hover !== null && !passes(DATA.blocks[hover])) { hover = null; }
+    renderReadout();
     renderSummary();
     draw();
   }
 
+  // Clicking a histogram bar sets whichever test is driving the view. With
+  // only the narrowest-point test on, it would otherwise silently move a
+  // control the user has switched off.
+  function setThreshold(v) {
+    if (useMax || !useMin) { useMax = true; maxThr = Math.min(24, v); }
+    else { minThr = Math.min(24, v); }
+    refresh();
+  }
+
   // ---- events ----
-  document.getElementById("thr").addEventListener("input", (e) => setThreshold(+e.target.value));
+  document.getElementById("thrMax").addEventListener("input", (e) => {
+    maxThr = +e.target.value; useMax = true; refresh();
+  });
+  document.getElementById("thrMin").addEventListener("input", (e) => {
+    minThr = +e.target.value; useMin = true; refresh();
+  });
+  document.getElementById("useMax").addEventListener("change", (e) => {
+    useMax = e.target.checked; refresh();
+  });
+  document.getElementById("useMin").addEventListener("change", (e) => {
+    useMin = e.target.checked; refresh();
+  });
   document.getElementById("togExcluded").addEventListener("change", (e) => {
     showExcluded = e.target.checked; draw();
   });
   document.getElementById("togContext").addEventListener("change", (e) => {
     showContext = e.target.checked; draw();
+  });
+  document.getElementById("togPinch").addEventListener("change", (e) => {
+    showPinch = e.target.checked;
+    if (!showPinch && hoverPinch !== null) { hoverPinch = null; renderReadout(); }
+    draw();
   });
 
   let drag = null;
@@ -628,14 +762,21 @@ footer a { color: var(--muted); }
       draw();
       return;
     }
-    const h = pick(e.clientX - r.left, e.clientY - r.top);
-    if (h !== hover) { hover = h; renderReadout(); draw(); }
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    // a narrowing is the smaller target, so it wins over the block under it
+    const hp = pickPinch(px, py);
+    const h = hp === null ? pick(px, py) : null;
+    if (hp !== hoverPinch || h !== hover) {
+      hoverPinch = hp; hover = h; renderReadout(); draw();
+    }
   });
   const endDrag = () => { drag = null; cv.classList.remove("dragging"); };
   cv.addEventListener("pointerup", endDrag);
   cv.addEventListener("pointercancel", endDrag);
   cv.addEventListener("pointerleave", () => {
-    if (hover !== null) { hover = null; renderReadout(); draw(); }
+    if (hover !== null || hoverPinch !== null) {
+      hover = null; hoverPinch = null; renderReadout(); draw();
+    }
   });
 
   cv.addEventListener("wheel", (e) => {
@@ -653,8 +794,7 @@ footer a { color: var(--muted); }
   }, { passive: false });
 
   new ResizeObserver(resize).observe(document.getElementById("shell"));
-  renderSummary();
-  renderReadout();
+  refresh();
   resize();
 })();
 </script>

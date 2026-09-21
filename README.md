@@ -173,6 +173,113 @@ A transect produces no width, and says why, when:
 - none on either side (`no_lots_either_side`, 2.2%) — bridges, the river,
   freeway corridors, airport and large industrial parcels
 
+## Width at any point: the curb profile
+
+Every width above comes from PBOT's Pavement Management System, which records
+one `PaveWidth` per pavement section. ORS 801.368 asks whether a roadway is
+"not more than 18 feet wide **at any point** between two intersections", and a
+pavement section is not a point. A stormwater planter, a curb extension or a
+parking-lane island is invisible to it: SE Taylor at SE 50th is on record as a
+flat 30 ft, and a pair of bioswales pinches it to 20.3 ft over 25 ft of block.
+
+`sql/11_curb_profile.sql` measures curb to curb every 5 ft off the curb-line
+dataset, using the stage 02 transect machinery with points instead of
+intervals. 2.75M stations in about 30 seconds. Two departures from stage 02:
+
+- **The reach is adaptive**, `max(25, PaveWidth/2 + 20)` ft rather than a flat
+  250. A long reach lets a transect crossing a driveway curb-cut find the curb
+  on the far side of the street and report a roadway twice as wide as it is.
+  Sizing the window from the PMS width means a missing curb yields NULL, which
+  is excluded, rather than a wrong number.
+- **Curb returns are excluded.** They flare the gap to 36-42 ft over the last
+  15 ft of a segment that ends at an intersection. Stations within 30 ft of an
+  end whose node has degree ≠ 2 are dropped; degree-2 ends are mid-block
+  continuations and keep theirs. Note the direction: excluding corners *lowers*
+  the block maximum, so it makes blocks more likely to pass. The report prints
+  the maximum both ways — the median corner inflation is 7.5 ft.
+
+**It agrees with PBOT.** Across 1.43M mid-block stations the median absolute
+difference from `PaveWidth` is **0.19 ft**, and 78.6% are within 2 ft. That is
+what makes it credible, and the 21% that are not is why it does not replace
+PMS: `narrow_residential` and `nrr_convertible` are untouched, and the curb
+profile sits beside them.
+
+**Not every curb is a roadway edge**, and this is the thing to understand
+before quoting any number from it. The measurement takes the nearest curb
+crossing on each side, and where that is an island or an interior line it is
+measuring something else. Two cases, handled differently:
+
+- A transect meeting *median curb on both sides* has measured the median. On
+  N Hayden Bay Dr it returns 4.7 ft, from -2.6 to +2.1 of the centerline.
+  That is the same class of error as a curb return, so those 16,601 stations
+  are excluded outright rather than flagged.
+- Everything else is **labelled, not guessed at**. SE Clinton at SE 77th comes
+  out at a flat 8.0 ft from two shoulder lines at ±4.0 ft, on a
+  street PBOT records as 22 ft and uncurbed. No threshold separates that from
+  a real narrow street: the centerline is off-centre by more than 10 ft on
+  12.7% of segments, so an edge 4 ft away is ordinary on a genuinely narrow
+  road. A geometric rule cutting edges within 5 ft would discard 14,514
+  stations on local streets whose median width is 15 ft — the exact population
+  of interest. So each block carries `edge_quality`: `street curb` (3110/3120
+  throughout), `mixed`, or `no street curb`.
+
+That distinction decides how the headline reads:
+
+| | blocks | miles |
+|---|---|---|
+| testable blocks (≥80% of stations measured) | 27,378 | 1,986.1 |
+| maximum ≤ 18 ft — never wider, the reading in stages 06 and 08 | 362 | 22.4 |
+| of those, street curb on both sides at every station | **39** | **1.8** |
+| minimum ≤ 18 ft — narrow somewhere, the alternative reading | 1,518 | 141.9 |
+
+313 of the 362 have no street curb anywhere along them. The honest number for
+"measured, at every point, against an unambiguous roadway edge" is 39 blocks.
+
+**The statute is not settled and the export does not pretend otherwise.**
+"Not more than 18 feet wide at any point" reads as a maximum — "any" under
+negation is universal, ORS 811.111(1)(d)(A) attaches the 15 mph limit to
+driving on "an alley or a narrow residential roadway" (a whole facility), and
+the "between two intersections" clause is surplusage unless it names the extent
+over which a maximum is taken. But no Oregon appellate decision, AG opinion or
+ODOT guidance construing ORS 801.368 was found, so `curb_max_ft` and
+`curb_min_ft` are both exported and neither reading is baked in.
+
+Two PBOT documents also disagree on whether paint counts. The City Traffic
+Engineer's memo of 23 September 2022, *Setting safe speed limits on Portland
+streets*, p. 2: "Streets that meet ORS 801.368 where **pavement** is not wider
+than 18 feet. Pavement markings that create an 18 foot or narrower travel way
+do not constitute a 'narrow residential street'." The Pedestrian Design Guide
+adopted four months earlier (§B.5.4.3, p. 44) says the opposite: "Projects may
+restripe roadways to provide a travelway that is 18 feet or less to meet this
+requirement… narrowed to 18 feet or less with painted line(s), wands, planters,
+and other furniture as appropriate." Which is why `block_edge_line` splits each
+block into `already_18_ft` (pavement that is physically narrow, which satisfies
+even the memo) and `needs_line_ft` (footage that would need an edge line, which
+runs into it). The same guide measures the travelway "exclusive of shoulders
+and/or on-street parking" — `sql/08_narrow_residential.sql` assumes the
+opposite about parking, and that disagreement is not resolved here.
+
+### Narrowings
+
+`out/curb_pinch_points.geojson` inventories 783 places where a street is
+materially narrower than itself: at least 3 ft under its own median, no wider
+than 24 ft, running at least 10 ft, bounded by street curb on both sides. The
+criterion is relative because an absolute one fails in both directions — a
+20 ft cut misses the SE Taylor bioswales at 20.3 ft while admitting freeway
+ramps that drop from 60 ft to 8 ft at a gore curb.
+
+338 are on locally classified streets. 150 reach 18 ft or less. The map has
+them on a toggle.
+
+### Outputs
+
+`out/curb_profile.txt` — the report, including the inferred `CurbType` domain.
+`out/curb_profile_by_block.csv` — per block: the five-number width summary,
+`edge_quality`, station counts by edge type, the edge-line arithmetic, and
+`width_test_18ft` / `confident_18ft`.
+`out/curb_pinch_points.geojson` — one point per narrowing, at its narrowest
+station.
+
 ## Confidence
 
 **Sidewalks fall inside the measured right of way.** A sidewalk polygon lies
@@ -213,7 +320,7 @@ SW Broadway 85.3 around 49.7, SE Powell 100.7 around 58.4.
 | Curb Extension Policy | independent `Pavement_RoadWidthFt`, cross-check only | [PDX open data, layer 1432](https://gis-pdx.opendata.arcgis.com/datasets/PDX::curb-extension-policy/about) |
 | Unimproved Right of Way | streets platted but never built | [PDX open data, layer 208](https://gis-pdx.opendata.arcgis.com/datasets/PDX::unimproved-right-of-way/about) |
 | City Boundaries | defines which segments are Portland's | [PDX open data, layer 10](https://gis-pdx.opendata.arcgis.com/datasets/PDX::city-boundaries/about) |
-| Curbs | curb and shoulder lines; loaded but unused (see below) | [PDX open data, layer 74](https://gis-pdx.opendata.arcgis.com/datasets/PDX::curbs/about) |
+| Curbs | curb and shoulder lines; the 5 ft width profile is measured off these | [PDX open data, layer 74](https://gis-pdx.opendata.arcgis.com/datasets/PDX::curbs/about) |
 
 PMS and the centerlines join on the street segment id: PMS `LocationID` is a
 four-character prefix, the literal `SEG`, then the `Streets.LOCALID` value.
@@ -259,10 +366,15 @@ through as `type_code` unmapped. Empirically 1500 is local streets,
 (PMS `MaintResp` = `PRIVATE`), 1800 is unnamed driveway-like segments with no
 pavement records, and 111x/112x are freeways and ramps.
 
-**The `curbs` table is loaded but nothing reads it.** It is there because a
-curb-to-curb width could be measured geometrically from curb lines for the
-segments PMS has no record of, using the same transect machinery. That fallback
-is not implemented.
+**`CurbType` has no published domain either.** Inferred in
+`sql/11_curb_profile.sql` and reported in `out/curb_profile.txt`: 3110 is the
+running street curb (56,183 features, 2,982 mi, median 200 ft long and 16 ft
+from the centerline), 3120 is the corner return (41,068 features, median 24 ft
+long, 90% within 60 ft of an intersection), 3130 is median and island curb
+(2,843 features, sitting 5 ft from the centerline), 3140 is the shoulder line
+and 3150 is flexcurb. Only 3110 and 3120 are unambiguously a roadway edge, and
+`edge_quality` in the curb-profile exports says which of them bounded each
+block's measurement.
 
 **Known bad values exist upstream.** PMS has 37 null `RoadWidth`, 12 records
 wider than 100 ft (one at 887 ft, which is not a street width), and 102 where

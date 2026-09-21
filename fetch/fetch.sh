@@ -43,14 +43,21 @@ hub_get() {
   else
     rm -f -- "$out.part"
     echo "       no hub export, paging REST instead"
-    page_layer "$name" "$OD/$service/MapServer/$layer/query" "1=1" 200 "*" OBJECTID
+    # Page in EPSG:4326 to match what the bulk export would have returned, so
+    # the SQL sees one shape and one CRS per layer whichever path ran. 7 decimal
+    # places is ~1 cm; the 0.01 ft precision used for 2913 would be ~1 km here.
+    page_layer "$name" "$OD/$service/MapServer/$layer/query" "1=1" 200 "*" OBJECTID 4326 7
+    python3 fetch/merge_pages.py "$RAW/$name" "$out"
+    rm -rf -- "${RAW:?}/${name:?}"
+    echo "done   $name ($(du -h "$out" | cut -f1)) via REST paging"
   fi
 }
 
-# page_layer <name> <query-url> <where> <page-size> <out-fields> <oid-field>
+# page_layer <name> <query-url> <where> <page-size> <out-fields> <oid-field> <out-sr> <precision>
 # Writes data/raw/<name>/page_NNNN.geojson. Resumable: existing pages are kept.
-# Always EPSG:2913 (Oregon North, feet) at 0.01 ft precision: small pages, no
-# reprojection later, and no risk of truncating degrees into uselessness.
+# out-sr and precision travel together and must agree: 2913 (Oregon North, feet)
+# wants 2 decimals for 0.01 ft, while 4326 needs 7 or degrees truncate into
+# uselessness.
 page_layer() {
   local name="$1"
   local url="$2"
@@ -58,6 +65,8 @@ page_layer() {
   local page="$4"
   local fields="$5"
   local oidfield="$6"
+  local outsr="$7"
+  local precision="$8"
   local dir="$RAW/$name"
   mkdir -p "$dir"
 
@@ -80,8 +89,8 @@ page_layer() {
         --data-urlencode "where=$where" \
         --data-urlencode "outFields=$fields" \
         --data-urlencode "returnGeometry=true" \
-        --data-urlencode "outSR=2913" \
-        --data-urlencode "geometryPrecision=2" \
+        --data-urlencode "outSR=$outsr" \
+        --data-urlencode "geometryPrecision=$precision" \
         --data-urlencode "orderByFields=$oidfield" \
         --data-urlencode "resultOffset=$offset" \
         --data-urlencode "resultRecordCount=$page" \
@@ -89,7 +98,11 @@ page_layer() {
         -o "$out.part"
       json_ok "$out.part"
       mv -- "$out.part" "$out"
-      printf '       page %d/%d\r' "$(( page_no + 1 ))" "$pages"
+      if [[ -t 1 ]]; then
+        printf '       page %d/%d\r' "$(( page_no + 1 ))" "$pages"
+      elif (( (page_no + 1) % 25 == 0 )); then
+        printf '       page %d/%d\n' "$(( page_no + 1 ))" "$pages"
+      fi
     fi
     offset=$(( offset + page ))
     page_no=$(( page_no + 1 ))
@@ -116,7 +129,7 @@ hub_get zoning              9e97018d1efd424aa52cb6ad031486a6_16   COP_OpenData_Z
 # COUNTY='M' picks up lots across the city line so boundary streets still have
 # taxlots on both sides; JURIS_CITY adds the Washington/Clackamas County slivers.
 TAXLOT_URL="https://services2.arcgis.com/McQ0OlIABe29rJJy/arcgis/rest/services/Taxlots_(Public)/FeatureServer/3/query"
-page_layer taxlots "$TAXLOT_URL" "COUNTY='M' OR JURIS_CITY='PORTLAND'" 2000 "TLID,COUNTY,JURIS_CITY" FID
+page_layer taxlots "$TAXLOT_URL" "COUNTY='M' OR JURIS_CITY='PORTLAND'" 2000 "TLID,COUNTY,JURIS_CITY" FID 2913 2
 
 {
   echo "fetched_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"

@@ -86,12 +86,20 @@ def main():
     for rel in changed:
         print(f"CHANGED  {rel}  ({expected[rel]['bytes']} -> {found[rel]['bytes']} bytes)")
     for rel in extra:
-        print(f"EXTRA    {rel}  (not in the fingerprint; harmless, nothing reads it)")
+        print(f"EXTRA    {rel}  (not in the fingerprint)")
 
     print(f"\n{ok}/{len(expected)} files match the published fetch.")
 
     if missing:
         print("Missing files: re-run ./fetch/fetch.sh", file=sys.stderr)
+        if extra:
+            print(
+                "Some files are missing while others are unexpected, which usually "
+                "means a layer changed download path - an ArcGIS bulk export "
+                "appearing or disappearing switches it between one file and a "
+                "page_*.geojson directory.",
+                file=sys.stderr,
+            )
         return 1
     if changed:
         print(

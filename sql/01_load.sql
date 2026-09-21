@@ -73,16 +73,14 @@ FROM ST_Read('data/raw/streets.geojson');
 -- segment, used to cross-check PMS rather than as a primary source.
 CREATE OR REPLACE TABLE curb_extension AS
 SELECT
-  f.properties.TSP_ID                 AS tsp_id,
-  f.properties.TSP_StreetName         AS street_name,
-  f.properties.TSP_Traffic            AS tsp_traffic,
-  f.properties.TSP_Design             AS tsp_design,
-  f.properties.Pavement_RoadWidthFt   AS road_width_ft,
-  f.properties.CurbExtensionPolicy    AS policy,
-  ST_GeomFromGeoJSON(f.geometry)      AS geom
-FROM (SELECT unnest(features) AS f
-      FROM read_json('data/raw/curb_extension/page_*.geojson',
-                     maximum_object_size = 200000000));
+  TSP_ID               AS tsp_id,
+  TSP_StreetName       AS street_name,
+  TSP_Traffic          AS tsp_traffic,
+  TSP_Design           AS tsp_design,
+  Pavement_RoadWidthFt AS road_width_ft,
+  CurbExtensionPolicy  AS policy,
+  to_2913(geom)        AS geom
+FROM ST_Read('data/raw/curb_extension.geojson');
 
 -- Platted but unbuilt right of way: streets that exist on paper only.
 CREATE OR REPLACE TABLE unimproved_row AS

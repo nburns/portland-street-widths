@@ -1,0 +1,96 @@
+name: Build and publish the site
+
+on:
+  push:
+    branches: [main]
+    # The DuckDB pipeline does not run here, so only the things that end up in
+    # the published bundle are worth a build.
+    paths:
+      - "site/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+# One in-flight deploy at a time, and let a newer push win rather than queue
+# behind a build whose output is already stale.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - run: npm ci
+        working-directory: site
+
+      # Protomaps keeps about two weeks of daily planet builds, so the cache is
+      # keyed by month: within a month the 19 MB extract is reused, and at the
+      # turn of one it is rebuilt against a planet build that still exists.
+      # Keying by run would store a new copy on every push for no benefit.
+      - id: cachekey
+        run: echo "month=$(date -u +%Y%m)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore basemap
+        id: basemap-cache
+        uses: actions/cache@v4
+        with:
+          path: site/public/basemap.pmtiles
+          key: basemap-${{ hashFiles('site/scripts/basemap.sh') }}-${{ steps.cachekey.outputs.month }}
+
+      - name: Build basemap
+        if: steps.basemap-cache.outputs.cache-hit != 'true'
+        run: ./site/scripts/basemap.sh
+
+      # A cache hit that restored a truncated or HTML-bodied file would publish
+      # a site whose basemap silently never draws, so check the archive magic
+      # before trusting it - the same seven bytes the client checks.
+      - name: Verify basemap
+        run: |
+          set -euo pipefail
+          f=site/public/basemap.pmtiles
+          if [ ! -s "$f" ]; then echo "basemap missing or empty" >&2; exit 1; fi
+          magic=$(head -c 7 "$f")
+          if [ "$magic" != "PMTiles" ]; then
+            echo "basemap is not a PMTiles archive (magic: $magic)" >&2
+            exit 1
+          fi
+          echo "basemap ok, $(du -h "$f" | cut -f1)"
+
+      - name: Check the data the page quotes is present
+        run: |
+          set -euo pipefail
+          for f in blocks narrowings boundary; do
+            test -s "site/public/data/$f.geojson" || { echo "missing $f.geojson" >&2; exit 1; }
+          done
+          test -s site/public/data/totals.json
+
+      - run: npm run build
+        working-directory: site
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

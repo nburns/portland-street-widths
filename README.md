@@ -45,6 +45,42 @@ make shell      # interactive DuckDB on the result
 changed. `make clean-db` drops the database and `out/`, keeping the downloads.
 `make clean` also deletes `data/raw/`, which means a full re-download.
 
+## The site
+
+`site/` is a Vite build of the map on MapLibre GL JS, published to GitHub Pages
+by `.github/workflows/pages.yml` on every push that touches it.
+
+```sh
+make site-data     # regenerate site/public/data/*.geojson from the database
+make basemap       # 19 MB Portland slice of the Protomaps planet build
+make site-dev      # vite dev server
+make site          # production build into site/dist
+```
+
+**The data is committed; the basemap is not.** CI cannot rebuild the DuckDB
+pipeline — that wants 863 MB of source data and twenty minutes — so the four
+GeoJSON files the page reads are in the tree (1.5 MB) and the workflow only
+runs `npm ci && vite build`. Regenerate them with `make site-data` whenever a
+pipeline stage changes, and commit the result.
+
+The basemap is a single PMTiles archive read with HTTP range requests: no tile
+server, no API key, no vendor account, which is the only arrangement in which
+"static site" and "basemap" are both true. `site/scripts/basemap.sh` extracts
+the Portland bounding box from the Protomaps daily planet build; CI runs the
+same script and caches the result by month, because Protomaps keeps only about
+two weeks of builds and a pinned date would fail silently later.
+
+**The site degrades rather than breaks when the basemap is missing**, drawing
+on a flat ground with the city boundary for orientation, and the toggle
+disables itself. It detects the archive by its `PMTiles` magic bytes rather
+than by HTTP status, because a static host serving an SPA fallback answers a
+missing file with `200 text/html` — and MapLibre then stalls forever trying to
+parse HTML as tiles, which presents as an empty page rather than as an error.
+
+`viz/` still builds the older single-file canvas map (`make map`), which inlines
+all of its data into one self-contained HTML file. The two now draw the same
+thing from the same database; see the note at the end of this README.
+
 ## What is in the repo
 
 The pipeline (`fetch/`, `sql/`, `viz/`, `Makefile`) and the finished exports in
@@ -389,3 +425,13 @@ each missing measurement is missing, the sidewalk containment check, the width
 distribution, modal widths, centerline centring, coverage by street type,
 plausibility of the leftover space, an outlier census, PMS join coverage, the
 curb-extension cross-check, and a spot check on a known block.
+
+## Two maps, for now
+
+`out/map.html` (from `viz/`) and `site/` render the same blocks from the same
+database. That is duplication, and it is deliberate only for as long as it
+takes to decide which survives: the canvas version is a single file you can
+email or open from disk with no server and no dependencies, and the MapLibre
+version has a basemap, real zoom, and about six hundred fewer lines of
+hand-rolled rendering. Keeping both means every change to the width logic has
+to be made twice.

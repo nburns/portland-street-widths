@@ -10,7 +10,8 @@ RAW_INPUTS := data/raw/pavement_management.geojson \
               data/raw/sidewalks.geojson \
               data/raw/zoning.geojson
 
-.PHONY: all fetch verify load row segments blocks ors nrr curb validate export map shell clean clean-db
+.PHONY: all fetch verify load row segments blocks ors nrr curb validate export map \
+        site-data site-dev site basemap shell clean clean-db
 .DELETE_ON_ERROR:
 
 all: export
@@ -87,6 +88,35 @@ out/map.html: sql/07_map_export.sql viz/template.html viz/build_map.py $(STAMP)/
 	python3 viz/build_map.py
 
 map: out/map.html
+
+# ---------------------------------------------------------------------------
+# site/ - the Vite build. Its GeoJSON is committed, because GitHub Actions
+# cannot rebuild the DuckDB pipeline: that needs 863 MB of source data and 20
+# minutes. CI runs `npm ci && vite build` against data that is already there.
+# ---------------------------------------------------------------------------
+SITE_DATA := site/public/data/blocks.geojson site/public/data/narrowings.geojson \
+             site/public/data/boundary.geojson site/public/data/totals.json
+
+$(SITE_DATA): sql/12_site_data.sql $(STAMP)/curb
+	@mkdir -p site/public/data
+	$(DUCKDB) "$(DB)" < sql/12_site_data.sql
+
+site-data: $(SITE_DATA)
+
+site/node_modules: site/package.json site/package-lock.json
+	cd site && npm ci
+	@touch site/node_modules
+
+# Regenerable, 19 MB, and gitignored - so it is a target rather than a file in
+# the tree. The site works without it, on a flat ground with the city boundary.
+basemap:
+	./site/scripts/basemap.sh
+
+site-dev: site/node_modules $(SITE_DATA)
+	cd site && npm run dev
+
+site: site/node_modules $(SITE_DATA)
+	cd site && npm run build
 
 shell:
 	$(DUCKDB) "$(DB)"

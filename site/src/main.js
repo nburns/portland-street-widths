@@ -5,7 +5,7 @@ import "./style.css";
 import { registerPmtilesProtocol, basemapAvailable, baseStyle } from "./basemap.js";
 import { addDataLayers, blockFilter, excludedFilter, LYR } from "./layers.js";
 import { indexBlocks, binStats, passes } from "./blocks.js";
-import { renderSummary, renderReadout, renderControls, renderNotes, onBarClick } from "./panel.js";
+import { renderSummary, renderReadout, renderControls, renderNotes, onBinClick } from "./panel.js";
 
 const PORTLAND = { center: [-122.658, 45.522], zoom: 10.6 };
 
@@ -62,7 +62,7 @@ async function init() {
     const box = document.getElementById("togBasemap");
     box.checked = false;
     box.disabled = true;
-    box.closest(".tog").title = "No basemap.pmtiles found \u2014 run `make basemap`";
+    box.closest("label").title = "No basemap.pmtiles found \u2014 run `make basemap`";
   }
 
   renderNotes(totals);
@@ -148,10 +148,10 @@ function wireEvents(blocksGeojson) {
   });
   on("togBasemap", "change", (e) => setBasemap(e.target.checked, blocksGeojson));
 
-  // Clicking a histogram bar drives whichever test is active. With only the
+  // Clicking a legend row drives whichever test is active. With only the
   // narrowest-point test on it would otherwise silently move a control the
   // reader has switched off.
-  onBarClick((v) => {
+  onBinClick((v) => {
     if (state.useMax || !state.useMin) { state.useMax = true; state.maxThr = Math.min(24, v); }
     else state.minThr = Math.min(24, v);
     refresh();

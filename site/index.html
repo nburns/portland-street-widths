@@ -3,135 +3,124 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Portland's Narrow Streets</title>
+<title>Portland's narrow streets</title>
 <meta name="description" content="Every Portland street block measured curb to curb, against the 18 ft threshold in ORS 801.368.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 </head>
 <body>
-<div class="wrap">
 
-  <header>
-    <p class="eyebrow">ORS 801.368 · narrow residential roadway</p>
-    <h1>Portland's narrow streets</h1>
-    <p class="lede">
-      A two-way roadway in a residence district, <strong>not more than 18 feet
-      wide at any point between two intersections</strong>, is a narrow
-      residential roadway, and the statutory speed limit on it is 15 mph. This
-      is every block in Portland measured against that sentence.
-    </p>
-    <div class="hero">
-      <div class="hero-num" id="heroMiles">—</div>
-      <div class="hero-unit">miles</div>
-      <div class="hero-sub" id="heroSub">&nbsp;</div>
-    </div>
-  </header>
+<h1>Portland's narrow streets</h1>
 
-  <div class="map-shell" id="shell">
-    <div id="map"></div>
+<p class="lede">
+  A two-way roadway in a residence district, <strong>not more than 18 feet wide
+  at any point between two intersections</strong>, is a narrow residential
+  roadway under ORS 801.368, and the statutory speed limit on it is 15 mph.
+  This is every block in Portland measured against that sentence.
+</p>
 
-    <div class="panel panel-tl">
-      <div class="thr-group" id="grpMax">
-        <label class="thr-head"><input type="checkbox" id="useMax" checked>
-          <span class="eyebrow">Widest point at most</span></label>
-        <div class="thr-val"><span id="maxVal">18</span> ft</div>
-        <input type="range" id="thrMax" min="12" max="24" step="1" value="18"
-               aria-label="Widest point at most, in feet">
-        <div class="thr-scale"><span>12</span><span>18</span><span>24</span></div>
-      </div>
+<p class="total">
+  <strong id="heroMiles">—</strong> miles
+  <span id="heroSub"></span>
+</p>
 
-      <div class="thr-group thr-group-2 thr-off" id="grpMin">
-        <label class="thr-head"><input type="checkbox" id="useMin">
-          <span class="eyebrow">Narrowest point at most</span></label>
-        <div class="thr-val"><span id="minVal">18</span> ft</div>
-        <input type="range" id="thrMin" min="12" max="24" step="1" value="18"
-               aria-label="Narrowest point at most, in feet">
-        <div class="thr-scale"><span>12</span><span>18</span><span>24</span></div>
-      </div>
+<form id="controls" onsubmit="return false">
+  <fieldset>
+    <legend>
+      <label><input type="checkbox" id="useMax" checked> Widest point at most</label>
+    </legend>
+    <input type="range" id="thrMax" min="12" max="24" step="1" value="18"
+           aria-label="Widest point at most, in feet">
+    <output id="maxVal">18</output> ft
+    <p class="hint">The block is never wider than this.</p>
+  </fieldset>
 
-      <div class="legend" id="legend"></div>
-      <p class="legend-note">Lighter is narrower, keyed to the widest point.
-        The two tests are independent: <em>widest at most</em> is a block that
-        never exceeds the figure, <em>narrowest at most</em> is one that drops
-        to it somewhere. A block draws when every enabled test passes.</p>
+  <fieldset>
+    <legend>
+      <label><input type="checkbox" id="useMin"> Narrowest point at most</label>
+    </legend>
+    <input type="range" id="thrMin" min="12" max="24" step="1" value="18"
+           aria-label="Narrowest point at most, in feet">
+    <output id="minVal">18</output> ft
+    <p class="hint">The block drops to this somewhere.</p>
+  </fieldset>
 
-      <div class="toggles">
-        <label class="tog"><input type="checkbox" id="togExcluded">
-          <span class="dash-key"></span> Narrow but block widens</label>
-        <label class="tog"><input type="checkbox" id="togPinch">
-          <span class="pinch-key"></span> Narrowings</label>
-        <label class="tog"><input type="checkbox" id="togBasemap" checked>
-          Basemap</label>
-      </div>
-    </div>
+  <fieldset>
+    <legend>Layers</legend>
+    <label><input type="checkbox" id="togExcluded"> Narrow but block widens</label>
+    <label><input type="checkbox" id="togPinch"> Narrowings</label>
+    <label><input type="checkbox" id="togBasemap" checked> Basemap</label>
+  </fieldset>
+</form>
 
-    <div class="panel panel-bl" id="readout">
-      <p class="eyebrow">Block detail</p>
-      <p class="readout-empty">Point at a highlighted block.</p>
-    </div>
+<div id="map"></div>
 
-    <div class="panel panel-br">
-      <p class="eyebrow">Miles by block maximum</p>
-      <div class="bars" id="bars"></div>
-    </div>
+<div class="under-map">
+  <div>
+    <h2>Miles by block maximum</h2>
+    <table id="legend">
+      <thead><tr><th>Width</th><th>Miles</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <p class="hint">Darker is narrower. Click a row to set the widest-point
+      slider. Both tests are independent, and a block draws when every enabled
+      one passes.</p>
   </div>
 
-  <div class="notes">
-    <div class="note">
-      <h2>What counts as a block</h2>
-      <p>A centerline segment is not a block. The source splits runs mid-block
-        at jurisdiction and address-range breaks — <strong>28,970 of 112,070
-        segments</strong> touch a node where exactly two streets meet, which is
-        a continuation, not an intersection.</p>
-      <p>Blocks here are rebuilt from network topology: node degree over the
-        full four-county network, segments joined at degree-2 nodes, connected
-        components. 39,103 Portland segments become
-        <strong>34,379 blocks</strong>.</p>
-    </div>
-
-    <div class="note">
-      <h2>Two readings of one sentence</h2>
-      <p>"Not more than 18 feet wide at any point" reads as a maximum: a block
-        that is never wider. Under that reading the answer is
-        <span class="mono">51.4</span> miles.</p>
-      <p>Read as "narrow somewhere", it is <span class="mono">72.7</span>. Both
-        sliders are provided because no Oregon appellate decision, Attorney
-        General opinion or ODOT guidance construing the statute was found.</p>
-    </div>
-
-    <div class="note">
-      <h2>Narrowings</h2>
-      <p>PBOT records one width per pavement section, so a bioswale or a curb
-        extension is invisible to it. Measuring curb to curb every 5 ft finds
-        <strong id="noteNarrowings">783</strong> places a street is materially
-        narrower than itself — <strong id="noteNarrowings18">150</strong> of
-        them reaching 18 ft or less.</p>
-      <p>SE Taylor at SE 50th is on record as a flat 30 ft. A pair of bioswales
-        pinches it to <span class="mono">20.3</span> ft.</p>
-    </div>
-
-    <div class="note caveat">
-      <h2>These are floors, not totals</h2>
-      <p>A block is testable only when every segment in it has a PBOT pavement
-        width on record. <strong id="noteUntestable">13,974 blocks —
-        1,067 miles — cannot be tested at all</strong>, and the gap is
-        concentrated in local streets, private roads and driveways, exactly
-        where narrow streets live.</p>
-      <p>Widths are <span class="mono">RoadWidth</span>, the graded roadway.
-        Using <span class="mono">PaveWidth</span> instead gives
-        <span class="mono">74.1</span> miles at 18 ft; the two fields are
-        undocumented, so the reading moves the answer.</p>
-    </div>
+  <div>
+    <h2>Block detail</h2>
+    <div id="readout"><p class="hint">Point at a highlighted block.</p></div>
   </div>
+</div>
 
-  <footer>
+<h2>What counts as a block</h2>
+<p>
+  A centerline segment is not a block. The source splits runs mid-block at
+  jurisdiction and address-range breaks — 28,970 of 112,070 segments touch a
+  node where exactly two streets meet, which is a continuation, not an
+  intersection. Blocks here are rebuilt from network topology, so 39,103
+  Portland segments become 34,379 blocks.
+</p>
+
+<h2>Two readings of one sentence</h2>
+<p>
+  "Not more than 18 feet wide at any point" reads as a maximum: a block that is
+  never wider. Under that reading the answer is 51.4 miles. Read as "narrow
+  somewhere", it is 72.7. Both sliders are here because no Oregon appellate
+  decision, Attorney General opinion or ODOT guidance construing the statute
+  was found.
+</p>
+
+<h2>Narrowings</h2>
+<p>
+  PBOT records one width per pavement section, so a bioswale or a curb
+  extension is invisible to it. Measuring curb to curb every 5 ft finds
+  <strong id="noteNarrowings">783</strong> places a street is materially
+  narrower than itself, <strong id="noteNarrowings18">150</strong> of them
+  reaching 18 ft or less. SE Taylor at SE 50th is on record as a flat 30 ft; a
+  pair of bioswales pinches it to 20.3 ft.
+</p>
+
+<h2>These are floors, not totals</h2>
+<p>
+  A block is testable only when every segment in it has a PBOT pavement width
+  on record. <strong id="noteUntestable">13,974 blocks — 1,067 miles — cannot
+  be tested at all</strong>, and the gap is concentrated in local streets,
+  private roads and driveways, exactly where narrow streets live. Widths are
+  RoadWidth, the graded roadway; using PaveWidth instead gives 74.1 miles at
+  18 ft, and the two fields are undocumented, so the reading moves the answer.
+</p>
+
+<footer>
+  <p>
     Roadway widths from PBOT's Pavement Management System; centerlines and city
     boundary from Portland open data; narrowings measured from PBOT's curb
-    lines. Block topology and mileage computed locally in DuckDB. Widths in
-    feet, lengths in centerline miles. Basemap © OpenStreetMap contributors.
-  </footer>
-</div>
+    lines. Computed in DuckDB. Widths in feet, lengths in centerline miles.
+    Basemap © OpenStreetMap contributors.
+  </p>
+  <p>
+    <a href="https://github.com/nburns/portland-street-widths">Source and data</a>
+    · Data CC BY 4.0, code MIT · Not authoritative municipal data.
+  </p>
+</footer>
 
 <script type="module" src="/src/main.js"></script>
 </body>

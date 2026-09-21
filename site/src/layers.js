@@ -1,4 +1,4 @@
-import { BORDER, EXCLUDED, PINCH, widthColourExpression } from "./theme.js";
+import { BOUNDARY, EXCLUDED, PINCH, widthColourExpression } from "./theme.js";
 
 export const SRC = { blocks: "blocks", narrowings: "narrowings", boundary: "boundary" };
 export const LYR = {
@@ -30,7 +30,7 @@ export function addDataLayers(map, blocksData) {
     id: LYR.boundary,
     type: "line",
     source: SRC.boundary,
-    paint: { "line-color": BORDER, "line-width": 1 },
+    paint: { "line-color": BOUNDARY, "line-width": 1 },
   });
 
   // Segments narrow enough on their own, in blocks that widen somewhere else.
@@ -67,7 +67,7 @@ export function addDataLayers(map, blocksData) {
     source: SRC.blocks,
     filter: ["==", ["get", "block_id"], -1],
     layout: { "line-cap": "round", "line-join": "round" },
-    paint: { "line-color": "#ffffff", "line-width": lineWidth(4.2), "line-opacity": 0.95 },
+    paint: { "line-color": "#1b1b1b", "line-width": lineWidth(4.6), "line-opacity": 0.9 },
   });
 
   map.addLayer({
@@ -85,7 +85,7 @@ export function addDataLayers(map, blocksData) {
       ],
       "circle-color": PINCH,
       "circle-opacity": 0.9,
-      "circle-stroke-color": "#ffffff",
+      "circle-stroke-color": "#1b1b1b",
       "circle-stroke-width": ["case", ["boolean", ["feature-state", "hover"], false], 1.6, 0],
     },
   });

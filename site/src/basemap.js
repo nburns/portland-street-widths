@@ -1,7 +1,7 @@
 import { Protocol } from "pmtiles";
 import maplibregl from "maplibre-gl";
 import { layers, namedFlavor } from "@protomaps/basemaps";
-import { CANVAS } from "./theme.js";
+
 
 // A PMTiles archive is a single file read with HTTP range requests: no tile
 // server, no API key, no vendor account. That is the only arrangement in which
@@ -45,9 +45,9 @@ export function baseStyle(withBasemap) {
   const style = {
     version: 8,
     glyphs: "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
-    sprite: "https://protomaps.github.io/basemaps-assets/sprites/v4/dark",
+    sprite: "https://protomaps.github.io/basemaps-assets/sprites/v4/light",
     sources: {},
-    layers: [{ id: "ground", type: "background", paint: { "background-color": CANVAS } }],
+    layers: [{ id: "ground", type: "background", paint: { "background-color": "#f6f5f3" } }],
   };
 
   if (withBasemap) {
@@ -56,9 +56,9 @@ export function baseStyle(withBasemap) {
       url: `pmtiles://${BASEMAP_URL}`,
       attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
     };
-    // "black" is the darkest flavour, which keeps the basemap as ground rather
-    // than as a competing subject: the width ramp is what the page is about.
-    style.layers.push(...layers("protomaps", namedFlavor("black"), { lang: "en" }));
+    // "light" keeps the basemap as ground rather than as a competing subject:
+    // the width ramp is what the page is about.
+    style.layers.push(...layers("protomaps", namedFlavor("light"), { lang: "en" }));
   }
 
   return style;

@@ -10,40 +10,27 @@ export function renderSummary(stats, totals) {
 
   $("heroMiles").textContent = fmt1(miles);
   $("heroSub").textContent =
-    `${blocks.toLocaleString()} blocks · ` +
+    `${blocks.toLocaleString()} blocks, ` +
     `${((miles / totals.testable_miles) * 100).toFixed(1)}% of ` +
     `${fmt1(totals.testable_miles)} testable miles`;
 
-  $("legend").innerHTML = stats
+  // One table instead of a legend and a histogram: they were the same numbers
+  // twice, and the swatch carries the ramp without a second chart.
+  $("legend").querySelector("tbody").innerHTML = stats
     .map(
       (s) =>
-        `<div class="legend-row" style="opacity:${s.active ? 1 : 0.34}">` +
-        `<span class="swatch" style="background:${s.bin.color}"></span>` +
-        `<span>${s.bin.label} ft</span>` +
-        `<span class="legend-num">${fmt1(s.miles)} mi</span></div>`
-    )
-    .join("");
-
-  // Bars scale against the unfiltered distribution so they stop rescaling as
-  // the sliders move, but report the passing miles.
-  const peak = Math.max(...stats.map((s) => s.total), 1);
-  $("bars").innerHTML = stats
-    .map(
-      (s) =>
-        `<button class="bar-row" type="button" aria-pressed="${s.active}" ` +
-        `data-w="${Number.isFinite(s.bin.max) ? s.bin.max : 24}">` +
-        `<span class="bar-label">${s.bin.label}</span>` +
-        `<span class="bar-track"><span class="bar-fill" style="width:` +
-        `${((s.miles / peak) * 100).toFixed(1)}%;background:${s.bin.color}"></span></span>` +
-        `<span class="bar-num">${fmt1(s.miles)}</span></button>`
+        `<tr aria-pressed="${s.active}" data-w="${Number.isFinite(s.bin.max) ? s.bin.max : 24}">` +
+        `<td><span class="swatch" style="background:${s.bin.color}"></span>` +
+        `${s.bin.label} ft</td>` +
+        `<td>${fmt1(s.miles)}</td></tr>`
     )
     .join("");
 }
 
-export function onBarClick(handler) {
-  $("bars").addEventListener("click", (e) => {
-    const el = e.target.closest(".bar-row");
-    if (el) handler(+el.dataset.w);
+export function onBinClick(handler) {
+  $("legend").addEventListener("click", (e) => {
+    const row = e.target.closest("tr[data-w]");
+    if (row) handler(+row.dataset.w);
   });
 }
 
@@ -53,9 +40,8 @@ export function renderReadout({ block, narrowing }) {
   if (narrowing) {
     const p = narrowing;
     el.innerHTML =
-      '<p class="eyebrow">Narrowing</p>' +
-      `<p class="readout-name">${esc(p.street)}</p>` +
-      '<dl class="readout-grid">' +
+      `<p class="readout-name">${esc(p.street)} — narrowing</p>` +
+      "<dl>" +
       `<dt>Narrowest</dt><dd>${p.w} ft</dd>` +
       `<dt>Street elsewhere</dt><dd>${p.s} ft</dd>` +
       `<dt>Narrower by</dt><dd>${p.d} ft</dd>` +
@@ -65,9 +51,7 @@ export function renderReadout({ block, narrowing }) {
   }
 
   if (!block) {
-    el.innerHTML =
-      '<p class="eyebrow">Block detail</p>' +
-      '<p class="readout-empty">Point at a highlighted block.</p>';
+    el.innerHTML = '<p class="hint">Point at a highlighted block.</p>';
     return;
   }
 
@@ -80,9 +64,8 @@ export function renderReadout({ block, narrowing }) {
   if (block.rw != null) rows.push(["Right of way", `${block.rw.toFixed(0)} ft`]);
 
   el.innerHTML =
-    '<p class="eyebrow">Block detail</p>' +
     `<p class="readout-name">${esc(block.street)}</p>` +
-    '<dl class="readout-grid">' +
+    "<dl>" +
     rows.map((r) => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join("") +
     "</dl>";
 }
@@ -94,8 +77,6 @@ export function renderControls(state) {
   $("minVal").textContent = String(state.minThr);
   $("useMax").checked = state.useMax;
   $("useMin").checked = state.useMin;
-  $("grpMax").classList.toggle("thr-off", !state.useMax);
-  $("grpMin").classList.toggle("thr-off", !state.useMin);
 }
 
 export function renderNotes(totals) {

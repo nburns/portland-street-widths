@@ -6,8 +6,10 @@ WHAT THIS COVERS
   out/                 the exported measurements and reports
   site/public/data/    the GeoJSON the published map reads
 
-The code that produces them - sql/, site/src/, site/scripts/, fetch/, the
-Makefile - is MIT licensed; see LICENSE.
+The code that produces them - sql/, site/src/, site/scripts/, fetch/,
+setup.sh, the Makefile - is MIT licensed; see LICENSE. That file is kept as
+the bare MIT text so GitHub detects it, which is why this split is described
+here and in README.md rather than there.
 
 ATTRIBUTION
 

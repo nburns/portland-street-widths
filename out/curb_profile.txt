@@ -33,11 +33,11 @@ centroid to the nearest street centerline, over a 4,000 feature sample.
 │ curb_type │ commonest_style │ features │ miles  │ median_len_ft │ median_offset_ft │ sampled │
 │   int32   │     varchar     │  int64   │ double │    double     │      double      │  int64  │
 ├───────────┼─────────────────┼──────────┼────────┼───────────────┼──────────────────┼─────────┤
-│      3110 │ UNKNOWN         │    56183 │ 2982.0 │         200.0 │             16.1 │    1873 │
-│      3120 │ UNKNOWN         │    41068 │  215.0 │          24.0 │             19.6 │    1405 │
-│      3130 │ STANDARD        │     2843 │  128.0 │          73.0 │              9.5 │     102 │
-│      3140 │ SHOULDER        │    17337 │  886.0 │         100.0 │             14.0 │     606 │
-│      3150 │ FLEXCURB        │      378 │    1.0 │           6.0 │             14.4 │      12 │
+│      3110 │ UNKNOWN         │    56183 │ 2982.0 │         200.0 │             16.1 │    1894 │
+│      3120 │ UNKNOWN         │    41068 │  215.0 │          24.0 │             19.6 │    1401 │
+│      3130 │ STANDARD        │     2843 │  128.0 │          73.0 │              8.7 │      95 │
+│      3140 │ SHOULDER        │    17337 │  886.0 │         100.0 │             13.7 │     594 │
+│      3150 │ FLEXCURB        │      378 │    1.0 │           6.0 │             14.3 │      12 │
 └───────────┴─────────────────┴──────────┴────────┴───────────────┴──────────────────┴─────────┘
 
 ========== measured width distribution, non-corner stations ==========
@@ -124,9 +124,9 @@ that feature is, and the width test should not be quoted from it.
 │  edge_quality  │ testable_blocks │ miles  │ passing_18ft │ median_width_ft │
 │    varchar     │      int64      │ double │    int64     │     double      │
 ├────────────────┼─────────────────┼────────┼──────────────┼─────────────────┤
-│ street curb    │           20076 │ 1372.7 │           39 │            32.0 │
+│ street curb    │           20077 │ 1372.8 │           39 │            32.0 │
 │ no street curb │            3669 │  321.4 │          313 │            24.0 │
-│ mixed          │            2644 │  284.2 │           10 │            30.5 │
+│ mixed          │            2643 │  284.1 │           10 │            30.5 │
 │ none           │             989 │    7.8 │            0 │            NULL │
 └────────────────┴─────────────────┴────────┴──────────────┴─────────────────┘
 
@@ -223,6 +223,6 @@ PBOT records a flat 30 ft PaveWidth for this segment.
 │ NE WYGANT ST     │  909.0 │          1 │        16.0 │           16.0 │        16.0 │      1.0 │
 │ SW WESTWOOD LN   │  902.0 │          1 │         9.1 │           10.0 │        10.7 │      1.0 │
 │ SW CHESAPEAK AVE │  860.0 │          3 │         9.7 │           10.0 │        15.7 │    0.925 │
-│ N OREGONIAN AVE  │  813.0 │          2 │        12.0 │           12.0 │        16.1 │      1.0 │
+│ N JUNCTION ST    │  813.0 │          2 │        12.0 │           12.0 │        16.1 │      1.0 │
 └──────────────────┴────────┴────────────┴─────────────┴────────────────┴─────────────┴──────────┘
   12 rows                                                                              7 columns

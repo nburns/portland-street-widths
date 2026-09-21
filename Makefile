@@ -10,7 +10,7 @@ RAW_INPUTS := data/raw/pavement_management.geojson \
               data/raw/sidewalks.geojson \
               data/raw/zoning.geojson
 
-.PHONY: all fetch verify load row segments blocks ors nrr curb validate export map \
+.PHONY: all fetch verify load row segments blocks ors nrr nrr-geojson curb validate export map \
         site-data site-dev site basemap shell clean clean-db
 .DELETE_ON_ERROR:
 
@@ -64,6 +64,14 @@ $(STAMP)/curb: sql/11_curb_profile.sql out/ors_narrow_residential.txt | $(STAMP)
 	$(DUCKDB) "$(DB)" < sql/11_curb_profile.sql | tee out/curb_profile.txt
 	@touch "$@"
 
+# sql/10 writes four GeoJSON files that were in out/ with no rule to rebuild
+# them: they had only ever been produced by hand.
+out/nrr_blocks.geojson out/nrr_by_street.geojson out/nrr_existing.geojson out/narrow_residential_roadways.geojson: \
+  sql/10_nrr_geojson.sql out/nrr_convertible.txt | out
+	$(DUCKDB) "$(DB)" < sql/10_nrr_geojson.sql
+
+nrr-geojson: out/nrr_blocks.geojson
+
 out/validation.txt: sql/04_validate.sql $(STAMP)/segments | out
 	$(DUCKDB) "$(DB)" < sql/04_validate.sql | tee "$@"
 
@@ -75,10 +83,10 @@ row:      $(STAMP)/row
 segments: $(STAMP)/segments
 blocks:   out/narrow_blocks.txt
 ors:      out/ors_narrow_residential.txt
-nrr:      out/nrr_convertible.txt
+nrr:      out/nrr_convertible.txt out/nrr_blocks.geojson
 curb:     $(STAMP)/curb
 validate: out/validation.txt
-export:   out/validation.txt out/narrow_blocks.txt out/ors_narrow_residential.txt out/nrr_convertible.txt $(STAMP)/curb out/portland_street_widths.csv out/portland_row_confident.csv
+export:   out/validation.txt out/narrow_blocks.txt out/ors_narrow_residential.txt out/nrr_convertible.txt out/nrr_blocks.geojson $(STAMP)/curb out/portland_street_widths.csv out/portland_row_confident.csv
 
 build:
 	@mkdir -p build

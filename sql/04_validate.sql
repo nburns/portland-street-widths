@@ -208,10 +208,19 @@ WITH ce_tile AS (
        unnest(range((ST_XMin(s.geom) / 300.0)::BIGINT - 1, (ST_XMax(s.geom) / 300.0)::BIGINT + 2)) AS gx(v),
        unnest(range((ST_YMin(s.geom) / 300.0)::BIGINT - 1, (ST_YMax(s.geom) / 300.0)::BIGINT + 2)) AS gy(v)
   WHERE s.road_width_ft IS NOT NULL
-), ranked AS (
-  SELECT c.ce_id, c.ce_width_ft, t.street_oid, ST_Distance(c.mid, t.geom) AS d,
-         row_number() OVER (PARTITION BY c.ce_id ORDER BY ST_Distance(c.mid, t.geom)) AS rn
+), pairs AS (
+  -- DISTINCT because a segment spanning several tiles meets the same curb
+  -- extension once per tile, and a duplicate at the same distance makes the
+  -- nearest-match below depend on which copy the scheduler ranked first.
+  SELECT DISTINCT c.ce_id, c.ce_width_ft, t.street_oid, ST_Distance(c.mid, t.geom) AS d
   FROM ce_tile c JOIN seg_tile t USING (gx, gy)
+), ranked AS (
+  -- street_oid breaks the tie: a curb extension beside an intersection is
+  -- equidistant from two centerlines, and without it the winner alternated
+  -- between runs and moved the published agreement rate.
+  SELECT ce_id, ce_width_ft, street_oid, d,
+         row_number() OVER (PARTITION BY ce_id ORDER BY d, street_oid) AS rn
+  FROM pairs
 )
 SELECT ce_id, ce_width_ft, street_oid, d FROM ranked WHERE rn = 1 AND d < 30.0;
 

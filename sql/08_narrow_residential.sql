@@ -61,7 +61,7 @@ GROUP BY s.street_oid;
 CREATE OR REPLACE TABLE narrow_residential AS
 SELECT
   m.block_id,
-  mode(sg.full_name)                                    AS full_name,
+  any_value(ba.full_name)                               AS full_name,
   count(*)                                              AS n_segments,
   round(sum(s.len_ft), 1)                               AS len_ft,
   max(sp.pave_max_ft)                                   AS pave_max_ft,
@@ -77,6 +77,7 @@ SELECT
   bool_and(sg.direction = 1)                            AS cond_two_way,
   bool_or(sr.is_residential)                            AS cond_residence
 FROM block_member m
+JOIN block_attr     ba ON ba.block_id   = m.block_id
 JOIN street_segment s  ON s.street_oid  = m.street_oid
 JOIN seg            sg ON sg.street_oid = m.street_oid
 LEFT JOIN seg_pavement   sp ON sp.street_oid = m.street_oid

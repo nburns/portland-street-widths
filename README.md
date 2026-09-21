@@ -90,6 +90,34 @@ Not in the repo, because it is ~1.5 GB that git would keep forever:
 
 - `data/raw/` - the upstream GeoJSON. `./setup.sh` downloads it.
 - `data/street_widths.duckdb` - a 640 MB intermediate rebuilt in 80 seconds.
+- `build/` - scratch JSON on the way to `out/map.html`, rewritten every run.
+- `site/node_modules/`, `site/dist/`, `site/public/basemap.pmtiles` - see
+  [The site](#the-site).
+
+**Eighteen of the nineteen artifacts in `out/` are byte-reproducible.** Two
+clean rebuilds produce identical files, which is what makes `git status` after
+a rebuild meaningful: a diff is a real change in the data or the code, never
+the scheduler. The exception is `portland_street_widths.gpkg`, which differs by
+five bytes because GeoPackage records its own creation time in
+`gpkg_contents.last_change` - a timestamp is supposed to vary, so it is left
+alone rather than faked.
+
+Getting there meant removing four kinds of tie:
+
+- `mode()` over a block's segments, where 885 blocks carry more than one street
+  name. Resolved once in `block_attr` (`sql/06`) as the value covering the most
+  centerline length, ties broken by the value, and read by stages 08 and 09
+  rather than recomputed.
+- nearest-match `row_number()` without a tiebreak, in the curb-extension check
+  and in the curb profile's nearest-crossing. The second was a real defect, not
+  just churn: two curb features crossing a transect at the same distance made
+  `is_outer_curb` flip, and SW Naito Pkwy reported `curb_min_outer_ft` as 2.1 ft
+  one run and 38.7 ft the next.
+- `ORDER BY` and `list()` with no total order, which shuffled CSV rows and the
+  parts inside a street's MultiLineString.
+- `sum()` over `DOUBLE`, which is non-associative: a parallel reduction adds in
+  whatever order the threads finish, moving a street between 0.337 and 0.338
+  miles. Summed as `DECIMAL` instead.
 
 What is versioned instead is `fetch/expected.json`: the size and SHA-256 of all
 195 source files as they were when these results were produced. `make verify`
@@ -338,8 +366,8 @@ segments and 6-16 ft on 8.2%; only 0.3% come out negative.
 
 **Curb-to-curb cross-check.** PBOT's Curb Extension Policy dataset carries its
 own `Pavement_RoadWidthFt`, maintained separately and sharing no key with the
-pavement system. Matched geometrically, 5,912 segments overlap: 5,298 agree
-exactly, 93.7% within 2 ft, median absolute difference 0.0 ft.
+pavement system. Matched geometrically, 5,913 segments overlap: 5,301 agree
+exactly, 93.8% within 2 ft, median absolute difference 0.0 ft.
 
 Named streets come out where they should: NE Alberta 56.4 ft ROW around 28.3 ft
 of roadway, NE Siskiyou 58.8 around 28.1, SE Hawthorne 64.4 around 40.6,

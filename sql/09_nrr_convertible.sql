@@ -20,11 +20,8 @@ LOAD spatial;
 
 CREATE OR REPLACE TABLE nrr_candidate AS
 WITH fc AS (
-  SELECT m.block_id, mode(p.functional_class) AS fclass
-  FROM block_member m
-  JOIN street_segment s USING (street_oid)
-  JOIN pms_portland p ON p.localid = s.localid
-  GROUP BY m.block_id
+  -- resolved once in sql/06 so it cannot tie-break differently here
+  SELECT block_id, functional_class AS fclass FROM block_attr
 )
 SELECT
   n.block_id, n.full_name, n.len_ft, n.n_segments,
@@ -97,9 +94,7 @@ SELECT
 FROM (
   SELECT n.len_ft, fc.fclass
   FROM narrow_residential n
-  JOIN (SELECT m.block_id, mode(p.functional_class) AS fclass
-        FROM block_member m JOIN street_segment s USING (street_oid)
-        JOIN pms_portland p ON p.localid = s.localid GROUP BY m.block_id) fc
+  JOIN (SELECT block_id, functional_class AS fclass FROM block_attr) fc
     USING (block_id)
   WHERE n.n_missing_pave = 0 AND n.cond_two_way AND n.cond_residence
     AND n.pave_max_ft <= 18 AND n.pave_max_ft > 1
@@ -137,7 +132,7 @@ COPY (
     pave_min_ft           AS pavement_min_ft,
     shoulder_each_side_ft
   FROM nrr_candidate
-  ORDER BY shoulder_each_side_ft, street, len_ft DESC
+  ORDER BY shoulder_each_side_ft, street, len_ft DESC, block_id
 ) TO 'out/nrr_convertible.csv' (HEADER, DELIMITER ',');
 
 -- Per street name, for scanning: where the convertible mileage is concentrated.
@@ -145,14 +140,15 @@ COPY (
   SELECT
     full_name                                   AS street,
     count(*)                                    AS blocks,
-    round(sum(len_ft) / 5280.0, 3)              AS miles,
+    round(sum(len_ft::DECIMAL(18,4)) / 5280.0, 3) AS miles,
     min(pave_max_ft)                            AS pavement_min_ft,
     max(pave_max_ft)                            AS pavement_max_ft,
     max(shoulder_each_side_ft)                  AS shoulder_each_side_ft_worst,
     count(*) FILTER (WHERE already_nrr)         AS blocks_already_nrr,
-    round(coalesce(sum(len_ft) FILTER (WHERE already_nrr), 0) / 5280.0, 3) AS miles_already_nrr
+    round(coalesce(sum(len_ft::DECIMAL(18,4)) FILTER (WHERE already_nrr), 0) / 5280.0, 3)
+                                                AS miles_already_nrr
   FROM nrr_candidate
   WHERE full_name IS NOT NULL AND trim(full_name) <> ''
   GROUP BY full_name
-  ORDER BY sum(len_ft) DESC
+  ORDER BY sum(len_ft::DECIMAL(18,4)) DESC, street
 ) TO 'out/nrr_by_street.csv' (HEADER, DELIMITER ',');

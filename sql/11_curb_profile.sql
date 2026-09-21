@@ -218,13 +218,19 @@ WHERE ST_GeometryType(d.rec.geom) = 'POINT';
 -- by street curb on both sides - the ones that are unambiguously a roadway.
 -- ===========================================================================
 CREATE OR REPLACE TABLE curb_gap AS
+-- oid breaks the tie. Two curb features can cross a transect at the same
+-- distance - a street curb and an island curb meeting at a corner, or two
+-- features sharing an endpoint - and without a tiebreak the winner alternates
+-- between runs. That changes which curb_type bounds the station, which flips
+-- is_outer_curb, which moves the block's edge_quality: SW Naito Pkwy reported
+-- curb_min_outer_ft as 2.1 ft one run and 38.7 ft the next.
 WITH pos AS (
   SELECT transect_id, sdist, curb_type, curb_style,
-         row_number() OVER (PARTITION BY transect_id ORDER BY sdist) AS rn
+         row_number() OVER (PARTITION BY transect_id ORDER BY sdist, oid) AS rn
   FROM curb_crossing WHERE sdist > 0.5
 ), neg AS (
   SELECT transect_id, sdist, curb_type, curb_style,
-         row_number() OVER (PARTITION BY transect_id ORDER BY sdist DESC) AS rn
+         row_number() OVER (PARTITION BY transect_id ORDER BY sdist DESC, oid) AS rn
   FROM curb_crossing WHERE sdist < -0.5
 )
 SELECT
@@ -454,7 +460,10 @@ LEFT JOIN seg_curb_width w USING (street_oid);
 -- curb_type domain evidence, tiled rather than cross-joined so it stays cheap.
 CREATE OR REPLACE TABLE curb_type_offset AS
 WITH samp AS (
-  SELECT oid, curb_type, ST_Centroid(geom) AS c FROM curbs USING SAMPLE 4000 ROWS
+  -- Seeded: an unseeded sample redraws every run, so the inferred domain
+  -- table below changed numbers without the data changing.
+  SELECT oid, curb_type, ST_Centroid(geom) AS c
+  FROM curbs USING SAMPLE reservoir(4000 ROWS) REPEATABLE (42)
 ), sb AS (
   SELECT oid, curb_type, c, ST_X(c) AS x, ST_Y(c) AS y FROM samp
 ), st AS (
@@ -567,7 +576,7 @@ SELECT
   count(roadway_ft) > 0    AS counts_as_roadway
 FROM curb_gap
 WHERE NOT in_corner AND gap_ft <= getvariable('thresh')::DOUBLE
-GROUP BY 1, 2 ORDER BY stations DESC LIMIT 10;
+GROUP BY 1, 2 ORDER BY stations DESC, left_curb_type, right_curb_type LIMIT 10;
 
 .print
 .print ========== what excluding curb returns is worth ==========
@@ -620,7 +629,7 @@ SELECT
                                           AS passing_18ft,
   round(median(curb_median_ft), 1)        AS median_width_ft
 FROM block_curb_width WHERE curb_testable
-GROUP BY 1 ORDER BY testable_blocks DESC;
+GROUP BY 1 ORDER BY testable_blocks DESC, edge_quality;
 
 .print
 .print ========== curb-derived against the pavement record, per block ==========
@@ -657,7 +666,7 @@ SELECT
   round(median(run_len_ft), 0)         AS median_run_ft,
   round(median(seg_median_ft), 1)      AS median_street_ft,
   round(median(min_gap_ft), 1)         AS median_narrowest_ft
-FROM curb_pinch GROUP BY 1 ORDER BY runs DESC;
+FROM curb_pinch GROUP BY 1 ORDER BY runs DESC, fclass;
 
 .print
 .print ========== the deepest narrowings on local streets ==========
@@ -665,7 +674,7 @@ SELECT full_name, run_len_ft, seg_median_ft, min_gap_ft, narrowing_ft,
        left_curb_style, right_curb_style
 FROM curb_pinch
 WHERE functional_class = 'UL' AND NOT any_shoulder_edge
-ORDER BY narrowing_ft DESC LIMIT 12;
+ORDER BY narrowing_ft DESC, full_name, run_len_ft LIMIT 12;
 
 .print
 .print ========== spot check: SE Taylor St at SE 50th, the bioswale pair ==========
@@ -681,7 +690,7 @@ SELECT full_name, round(portland_len_ft, 0) AS len_ft, n_segments,
        curb_min_ft, curb_median_ft, curb_max_ft, coverage
 FROM block_curb_width
 WHERE curb_testable AND curb_max_ft <= getvariable('thresh')::DOUBLE
-ORDER BY portland_len_ft DESC LIMIT 12;
+ORDER BY portland_len_ft DESC, block_id LIMIT 12;
 
 -- ===========================================================================
 -- Exports
@@ -710,7 +719,7 @@ COPY (
          run_len_ft, min_gap_ft, seg_median_ft, narrowing_ft,
          left_curb_style, right_curb_style, any_shoulder_edge,
          ST_Transform(geom, 'EPSG:2913', 'EPSG:4326', always_xy := true) AS geom
-  FROM curb_pinch ORDER BY narrowing_ft DESC
+  FROM curb_pinch ORDER BY narrowing_ft DESC, pinch_id
 ) TO 'out/curb_pinch_points.geojson'
   WITH (FORMAT GDAL, DRIVER 'GeoJSON', SRS 'EPSG:4326');
 

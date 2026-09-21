@@ -44,6 +44,62 @@ WITH RECURSIVE reach(seg, root) AS (
 SELECT seg AS street_oid, min(root) AS block_id
 FROM reach GROUP BY seg;
 
+-- Block attributes, resolved deterministically.
+--
+-- 885 blocks carry more than one street name and 238 more than one type code,
+-- because a block is a run between intersections and the source splits it
+-- wherever a name or a classification changes. `mode()` picks among ties by
+-- whichever row a parallel aggregate happened to finish first, so SW Fern St
+-- and SW Upper Drive Pl - one segment each, identical geometry and widths -
+-- traded places between runs and churned five committed artifacts for no
+-- information.
+--
+-- The rule here is the value covering the most centerline length, ties broken
+-- by the value itself. Length beats segment count: a block named A for 400 ft
+-- and B for 100 ft is A whether or not B was split into three pieces. Stages
+-- 08 and 09 read this rather than recomputing their own.
+CREATE OR REPLACE TABLE block_attr AS
+WITH per_name AS (
+  SELECT m.block_id, sg.full_name AS v, sum(s.len_ft) AS len
+  FROM block_member m
+  JOIN street_segment s USING (street_oid)
+  JOIN seg             sg USING (street_oid)
+  GROUP BY 1, 2
+), per_type AS (
+  SELECT m.block_id, sg.type_code AS v, sum(s.len_ft) AS len
+  FROM block_member m
+  JOIN street_segment s USING (street_oid)
+  JOIN seg             sg USING (street_oid)
+  GROUP BY 1, 2
+), per_fclass AS (
+  SELECT m.block_id, p.functional_class AS v, sum(s.len_ft) AS len
+  FROM block_member m
+  JOIN street_segment s USING (street_oid)
+  JOIN pms_portland    p ON p.localid = s.localid
+  GROUP BY 1, 2
+), pick_name AS (
+  SELECT block_id, v FROM (
+    SELECT block_id, v, row_number() OVER (PARTITION BY block_id ORDER BY len DESC, v) AS rn
+    FROM per_name) WHERE rn = 1
+), pick_type AS (
+  SELECT block_id, v FROM (
+    SELECT block_id, v, row_number() OVER (PARTITION BY block_id ORDER BY len DESC, v) AS rn
+    FROM per_type) WHERE rn = 1
+), pick_fclass AS (
+  SELECT block_id, v FROM (
+    SELECT block_id, v, row_number() OVER (PARTITION BY block_id ORDER BY len DESC, v) AS rn
+    FROM per_fclass) WHERE rn = 1
+)
+SELECT
+  b.block_id,
+  n.v AS full_name,
+  t.v AS type_code,
+  f.v AS functional_class
+FROM (SELECT DISTINCT block_id FROM block_member) b
+LEFT JOIN pick_name   n USING (block_id)
+LEFT JOIN pick_type   t USING (block_id)
+LEFT JOIN pick_fclass f USING (block_id);
+
 -- One row per block, carrying the worst case along its whole length. Widths are
 -- maxima over the block's segments, and each segment's own max over its
 -- pavement sections - the finest resolution the source data supports.
@@ -54,8 +110,8 @@ SELECT
   count(*) FILTER (WHERE s.street_oid IS NOT NULL)    AS n_portland_segments,
   round(sum(s.len_ft), 1)                             AS portland_len_ft,
   round(sum(s.len_ft) / 5280.0, 4)                    AS portland_len_mi,
-  mode(s.full_name)                                   AS full_name,
-  mode(s.type_code)                                   AS type_code,
+  any_value(a.full_name)                              AS full_name,
+  any_value(a.type_code)                              AS type_code,
 
   -- roadway (curb to curb), from PBOT pavement records
   max(s.road_width_max_ft)                            AS road_width_max_ft,
@@ -70,6 +126,7 @@ SELECT
   bool_or(s.row_flag_at_transect_cap)                 AS any_row_at_cap
 FROM block_member m
 JOIN streets  t ON t.street_oid = m.street_oid
+JOIN block_attr a ON a.block_id = m.block_id
 LEFT JOIN street_segment s ON s.street_oid = m.street_oid
 GROUP BY m.block_id
 HAVING count(*) FILTER (WHERE s.street_oid IS NOT NULL) > 0;

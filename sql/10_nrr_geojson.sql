@@ -53,7 +53,7 @@ COPY (
   -- by-street file below already covers the full universe. The complete block
   -- table is out/nrr_convertible.csv.
   WHERE c.shoulder_each_side_ft <= 3
-  ORDER BY c.shoulder_each_side_ft DESC      -- qualifying blocks drawn last, on top
+  ORDER BY c.shoulder_each_side_ft DESC, c.block_id  -- qualifying blocks drawn last, on top
 ) TO 'out/nrr_blocks.geojson'
   WITH (FORMAT GDAL, DRIVER 'GeoJSON', SRS 'EPSG:4326',
         LAYER_CREATION_OPTIONS 'COORDINATE_PRECISION=5');
@@ -68,7 +68,7 @@ COPY (
     min(c.pave_max_ft)                             AS pavement_min_ft,
     max(c.pave_max_ft)                             AS pavement_max_ft,
     count(*)                                       AS blocks,
-    round(sum(c.len_ft) / 5280.0, 3)               AS miles,
+    round(sum(c.len_ft::DECIMAL(18,4)) / 5280.0, 3) AS miles,
     count(*) FILTER (WHERE c.already_nrr)          AS blocks_already_nrr,
     nrr_stroke(max(c.shoulder_each_side_ft))       AS stroke,
     CASE WHEN max(c.shoulder_each_side_ft) <= 0 THEN 4 ELSE 3 END AS "stroke-width",
@@ -76,12 +76,15 @@ COPY (
     -- ST_Collect over already-multipart geometries nests into a
     -- GeometryCollection, which renderers handle inconsistently; extracting
     -- type 2 forces a clean MultiLineString.
-    ST_Transform(ST_CollectionExtract(ST_Collect(list(g.geom)), 2),
+    -- list() collects in whatever order the aggregate finished, so the parts
+    -- of a street's MultiLineString were shuffled between runs even though the
+    -- set of parts never changed. Ordering by block_id fixes the sequence.
+    ST_Transform(ST_CollectionExtract(ST_Collect(list(g.geom ORDER BY g.block_id)), 2),
                  'EPSG:2913', 'EPSG:4326', always_xy := true) AS geom
   FROM nrr_candidate c JOIN nrr_block_geom g USING (block_id)
   WHERE c.full_name IS NOT NULL AND trim(c.full_name) <> ''
   GROUP BY c.full_name
-  ORDER BY max(c.shoulder_each_side_ft) DESC
+  ORDER BY max(c.shoulder_each_side_ft) DESC, street
 ) TO 'out/nrr_by_street.geojson'
   WITH (FORMAT GDAL, DRIVER 'GeoJSON', SRS 'EPSG:4326',
         LAYER_CREATION_OPTIONS 'COORDINATE_PRECISION=5');

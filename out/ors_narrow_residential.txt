@@ -59,11 +59,11 @@
 │ SW NEBRASKA ST   │ 1786.0 │          1 │          18 │          18 │          18 │
 │ NW SALTZMAN RD   │ 1422.0 │          2 │          18 │          18 │          18 │
 │ SW HIGHLAND PKWY │ 1397.0 │          1 │          16 │          16 │          16 │
-│ SW TAYLOR CT     │ 1375.0 │          2 │          12 │          18 │          18 │
+│ SW TAYLOR ST     │ 1375.0 │          2 │          12 │          18 │          18 │
 │ SW MAPLECREST CT │ 1373.0 │          1 │          18 │          18 │          20 │
 │ SW PARKHILL DR   │ 1365.0 │          1 │          18 │          18 │          18 │
 │ NE ALBERTA CT    │ 1344.0 │          1 │          18 │          18 │          18 │
-│ SW SOUTHVIEW PL  │ 1327.0 │          3 │          12 │          16 │          16 │
+│ SW GUNTHER LN    │ 1327.0 │          3 │          12 │          16 │          16 │
 └──────────────────┴────────┴────────────┴─────────────┴─────────────┴─────────────┘
   12 rows                                                                6 columns
 [90mWARNING:

@@ -5,6 +5,9 @@ __pycache__/
 # Build stamps - local mtime bookkeeping for make, not content
 .stamps/
 
+# Scratch JSON on the way to out/map.html, rewritten on every `make map`.
+build/
+
 # Source data: ~900 MB, re-downloadable with ./setup.sh, and fingerprinted in
 # fetch/expected.json so a re-fetch can be checked against the published run.
 data/raw/

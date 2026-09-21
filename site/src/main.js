@@ -3,16 +3,18 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "./style.css";
 
 import { registerPmtilesProtocol, basemapAvailable, baseStyle } from "./basemap.js";
-import { addDataLayers, blockFilter, excludedFilter, LYR } from "./layers.js";
+import { addDataLayers, blockFilter, LYR } from "./layers.js";
 import { indexBlocks, binStats, passes } from "./blocks.js";
-import { renderSummary, renderReadout, renderControls, renderNotes, onBinClick } from "./panel.js";
+import { renderSummary, renderReadout, renderControls, renderNotes,
+         renderDerivedNotes, onBinClick } from "./panel.js";
 
 const PORTLAND = { center: [-122.658, 45.522], zoom: 10.6 };
 
 const state = {
-  wholeOn: true, wholeOp: "le", wholeVal: 18,   // every point <= 18 ft
-  partOn: false, partOp: "le", partVal: 18,     // some point <= 18 ft
-  showExcluded: false,
+  // Defaults to "narrow somewhere", which is how ORS 801.368's "not more than
+  // 18 feet wide at any point" is read here. The stricter "never wider"
+  // construction is one radio button away.
+  reading: "part", op: "le", val: 18,
   showPinch: false,
   showBasemap: true,
 };
@@ -23,6 +25,7 @@ let totals = null;
 let hoverBlock = null;
 let hoverNarrowing = null;
 let map = null;
+let universe = { blocks: 0, miles: 0 };
 
 // A failed data fetch must not render as an empty map, which would read as
 // "no narrow streets in Portland" rather than as a broken page.
@@ -53,6 +56,7 @@ async function init() {
 
   blocks = indexBlocks(blocksGeojson);
   blockById = new Map(blocks.map((b) => [b.id, b]));
+  universe = { blocks: blocks.length, miles: blocks.reduce((a, b) => a + b.bl, 0) / 5280 };
   totals = totalsJson;
 
   if (!basemapOk) {
@@ -64,6 +68,7 @@ async function init() {
   }
 
   renderNotes(totals);
+  renderDerivedNotes(blocks);
 
   map = new maplibregl.Map({
     container: "map",
@@ -110,13 +115,6 @@ function setBasemap(on, blocksGeojson) {
 function applyFilters() {
   if (!map.getLayer(LYR.blocks)) return;
   map.setFilter(LYR.blocks, blockFilter(state));
-  map.setFilter(LYR.excluded, excludedFilter(state));
-  // the complement of a whole-block-at-most test, so it means nothing without one
-  map.setLayoutProperty(
-    LYR.excluded,
-    "visibility",
-    state.showExcluded && state.wholeOn && state.wholeOp === "le" ? "visible" : "none"
-  );
   map.setLayoutProperty(LYR.narrowings, "visibility", state.showPinch ? "visible" : "none");
   map.setFilter(
     LYR.hover,
@@ -128,20 +126,17 @@ function refresh() {
   renderControls(state);
   if (hoverBlock && !passes(hoverBlock, state)) hoverBlock = null;
   renderReadout({ block: hoverBlock, narrowing: hoverNarrowing });
-  renderSummary(binStats(blocks, state), totals);
+  renderSummary(binStats(blocks, state), totals, universe);
   applyFilters();
 }
 
 function wireEvents(blocksGeojson) {
   const on = (id, ev, fn) => document.getElementById(id).addEventListener(ev, fn);
 
-  on("thrWhole", "input", (e) => { state.wholeVal = +e.target.value; state.wholeOn = true; refresh(); });
-  on("thrPart", "input", (e) => { state.partVal = +e.target.value; state.partOn = true; refresh(); });
-  on("opWhole", "change", (e) => { state.wholeOp = e.target.value; state.wholeOn = true; refresh(); });
-  on("opPart", "change", (e) => { state.partOp = e.target.value; state.partOn = true; refresh(); });
-  on("useWhole", "change", (e) => { state.wholeOn = e.target.checked; refresh(); });
-  on("usePart", "change", (e) => { state.partOn = e.target.checked; refresh(); });
-  on("togExcluded", "change", (e) => { state.showExcluded = e.target.checked; refresh(); });
+  on("thr", "input", (e) => { state.val = +e.target.value; refresh(); });
+  on("op", "change", (e) => { state.op = e.target.value; refresh(); });
+  on("readPart", "change", () => { state.reading = "part"; refresh(); });
+  on("readWhole", "change", () => { state.reading = "whole"; refresh(); });
   on("togPinch", "change", (e) => {
     state.showPinch = e.target.checked;
     if (!state.showPinch) hoverNarrowing = null;
@@ -152,9 +147,8 @@ function wireEvents(blocksGeojson) {
   // A legend row is a whole-block maximum, so it drives that control and says
   // so by switching it on rather than moving something invisible.
   onBinClick((v) => {
-    state.wholeOn = true;
-    state.wholeOp = "le";
-    state.wholeVal = Math.min(40, v);
+    state.op = "le";
+    state.val = Math.min(40, v);
     refresh();
   });
 

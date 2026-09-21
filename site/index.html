@@ -14,7 +14,8 @@
   A two-way roadway in a residence district, <strong>not more than 18 feet wide
   at any point between two intersections</strong>, is a narrow residential
   roadway under ORS 801.368, and the statutory speed limit on it is 15 mph.
-  This is every block in Portland measured against that sentence.
+  This is every Portland block that could be one: two-way, in a residence
+  district, and not an arterial.
 </p>
 
 <p class="total">
@@ -24,38 +25,27 @@
 
 <form id="controls" onsubmit="return false">
   <fieldset>
-    <legend>
-      <label><input type="checkbox" id="useWhole" checked> Whole block</label>
-    </legend>
-    <select id="opWhole" aria-label="Whole block comparison">
-      <option value="le" selected>at most</option>
-      <option value="ge">at least</option>
-    </select>
-    <input type="range" id="thrWhole" min="10" max="40" step="1" value="18"
-           aria-label="Whole block width in feet">
-    <output id="wholeVal">18</output> ft
-    <p class="hint">Tests the block's <em>widest</em> point, so “at most”
-      means never wider &mdash; the statutory reading.</p>
+    <legend>Reading of &ldquo;at any point&rdquo;</legend>
+    <label><input type="radio" name="reading" id="readPart" value="part" checked>
+      Narrow <em>somewhere</em> in the block</label>
+    <label><input type="radio" name="reading" id="readWhole" value="whole">
+      Never wider, anywhere in the block</label>
   </fieldset>
 
   <fieldset>
-    <legend>
-      <label><input type="checkbox" id="usePart"> Narrow part</label>
-    </legend>
-    <select id="opPart" aria-label="Narrow part comparison">
+    <legend>Width</legend>
+    <select id="op" aria-label="Comparison">
       <option value="le" selected>at most</option>
       <option value="ge">at least</option>
     </select>
-    <input type="range" id="thrPart" min="10" max="40" step="1" value="18"
-           aria-label="Narrow part width in feet">
-    <output id="partVal">18</output> ft
-    <p class="hint">Tests the block's <em>narrowest</em> point, so “at most”
-      means it drops to this somewhere.</p>
+    <input type="range" id="thr" min="10" max="40" step="1" value="18"
+           aria-label="Width in feet">
+    <output id="thrVal">18</output> ft
+    <p class="hint" id="thrHint"></p>
   </fieldset>
 
   <fieldset>
     <legend>Layers</legend>
-    <label><input type="checkbox" id="togExcluded"> Narrow but block widens</label>
     <label><input type="checkbox" id="togPinch"> Narrowings</label>
     <label><input type="checkbox" id="togBasemap" checked> Basemap</label>
   </fieldset>
@@ -65,16 +55,12 @@
 
 <div class="under-map">
   <div>
-    <h2>Miles by block maximum</h2>
+    <h2>Miles by narrowest point</h2>
     <table id="legend">
       <thead><tr><th>Width</th><th>Miles</th></tr></thead>
       <tbody></tbody>
     </table>
-    <p class="hint">Darker is narrower. Click a row to set the whole-block
-      slider. The two tests are independent and a block draws when every
-      enabled one passes, so <em>whole block at least 19</em> with
-      <em>narrow part at most 18</em> finds streets too wide to qualify
-      except where something already narrows them.</p>
+    <p class="hint">Darker is narrower. Click a row to set the width.</p>
   </div>
 
   <div>
@@ -92,13 +78,23 @@
   Portland segments become 34,379 blocks.
 </p>
 
-<h2>Two readings of one sentence</h2>
+<h2>Where the mileage is</h2>
 <p>
-  "Not more than 18 feet wide at any point" reads as a maximum: a block that is
-  never wider. Under that reading the answer is 51.4 miles. Read as "narrow
-  somewhere", it is 72.7. Both sliders are here because no Oregon appellate
-  decision, Attorney General opinion or ODOT guidance construing the statute
-  was found.
+  Read as "18 feet or less somewhere", <strong id="noteSomewhere">100.8</strong>
+  miles already qualify. Read strictly as "never wider than 18 feet", it is
+  <strong id="noteStrict">63.4</strong>. No Oregon appellate decision, Attorney
+  General opinion or ODOT guidance construing the statute was found, so both
+  are one click apart rather than one being asserted.
+</p>
+<p>
+  Beyond that is the striping inventory. ORS 801.450 measures the roadway
+  "exclusive of the shoulder", so a block wider than 18 ft can be brought inside
+  the statute with an edge line. Switch to <em>never wider</em> and push the
+  width past 18 to see it: <strong id="noteConvertible">256.6</strong> miles sit
+  at 24 ft or less, which is 3 ft of shoulder each side, out of
+  <strong id="noteEligible">1,154.6</strong> eligible miles in total. PBOT's
+  city traffic engineer rejects paint for this purpose; PBOT's own Pedestrian
+  Design Guide allows it.
 </p>
 
 <h2>Narrowings</h2>
@@ -113,12 +109,12 @@
 
 <h2>These are floors, not totals</h2>
 <p>
-  A block is testable only when every segment in it has a PBOT pavement width
-  on record. <strong id="noteUntestable">13,974 blocks — 1,067 miles — cannot
-  be tested at all</strong>, and the gap is concentrated in local streets,
-  private roads and driveways, exactly where narrow streets live. Widths are
-  RoadWidth, the graded roadway; using PaveWidth instead gives 74.1 miles at
-  18 ft, and the two fields are undocumented, so the reading moves the answer.
+  <strong id="noteUntestable">13,974 blocks — 1,067 miles — have no PBOT
+  pavement width at all</strong>, and the gap sits in exactly the local and
+  unimproved streets where narrow ones live. Measuring curb to curb every 5 ft
+  reaches 542 of those miles, and those blocks are on this map with their width
+  marked as coming from the curb lines. The remaining 525 miles are measured by
+  nobody, so the totals here are a floor.
 </p>
 
 <footer>

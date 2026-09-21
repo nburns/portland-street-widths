@@ -24,7 +24,7 @@ export const binFor = (w) => BINS.find((b) => w <= b.max) ?? BINS.at(-1);
 
 // MapLibre `step` expression over the same bins, so the line colour cannot
 // drift from the legend beside it.
-export function widthColourExpression(property = "bm") {
+export function widthColourExpression(property = "wn") {
   const steps = ["step", ["get", property], BINS[0].color];
   for (let i = 0; i < BINS.length - 1; i++) steps.push(BINS[i].max + 1, BINS[i + 1].color);
   return steps;

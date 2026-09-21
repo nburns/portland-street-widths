@@ -12,11 +12,14 @@ export function indexBlocks(featureCollection) {
       byId.set(p.block_id, {
         id: p.block_id,
         street: p.street,
-        bm: p.bm,
-        bn: p.bn,
+        wx: p.wx,
+        wn: p.wn,
         bl: p.bl,
         nseg: p.nseg,
         rw: p.rw,
+        src: p.src,
+        sh: p.sh,
+        nrr: p.nrr,
       });
     } else if (p.rw != null) {
       // right of way is per segment; the block's widest is the useful one
@@ -27,21 +30,21 @@ export function indexBlocks(featureCollection) {
   return [...byId.values()];
 }
 
-// Each control owns one end of the block's width profile, in either
-// direction: bm is the widest point, bn the narrowest.
+// One reading at a time, because the two are alternative constructions of the
+// same sentence rather than conditions that stack. `reading` picks which end
+// of the block's width profile the threshold applies to: wn is its narrowest
+// point, wx its widest.
 //
-//   whole block at most X    bm <= X   never wider than X - the statute
-//   whole block at least X   bm >= X   gets at least this wide somewhere
-//   narrow part at most X    bn <= X   drops to X somewhere
-//   narrow part at least X   bn >= X   never narrower than X
+//   somewhere, at most X    wn <= X   18 ft or less at some point
+//   never wider, at most X  wx <= X   18 ft or less at every point
 //
-// Fixing one statistic per control is what keeps every pair meaningful. An
-// earlier version read "whole block at least X" as a universal (bn >= X),
-// which made the most useful query - wider than 18 overall, narrowed to 18
-// somewhere - a contradiction that always returned nothing.
-export const passes = (b, st) =>
-  (!st.wholeOn || (st.wholeOp === "le" ? b.bm <= st.wholeVal : b.bm >= st.wholeVal)) &&
-  (!st.partOn || (st.partOp === "le" ? b.bn <= st.partVal : b.bn >= st.partVal));
+// Widths are PaveWidth where PBOT records one and curb-measured where it does
+// not, which is why `src` travels with the block: the two are not the same
+// kind of evidence and the readout says which it is.
+export const passes = (b, st) => {
+  const w = st.reading === "part" ? b.wn : b.wx;
+  return st.op === "le" ? w <= st.val : w >= st.val;
+};
 
 // Counted over the blocks currently drawn rather than over the whole dataset,
 // because with two independent tests no bin is wholly in or out: a 23-24 ft
@@ -54,7 +57,7 @@ export function binStats(blocks, state) {
     const lo = i === 0 ? 0 : BINS[i - 1].max;
     let miles = 0, count = 0, total = 0;
     for (const b of blocks) {
-      if (b.bm <= lo || b.bm > bin.max) continue;
+      if (b.wn <= lo || b.wn > bin.max) continue;
       total += b.bl / 5280;
       if (passes(b, state)) { miles += b.bl / 5280; count++; }
     }

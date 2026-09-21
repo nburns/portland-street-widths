@@ -4,15 +4,18 @@ const fmt1 = (n) =>
 const esc = (s) =>
   String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
 
-export function renderSummary(stats, totals) {
+// The denominator is counted off the blocks actually shipped, not read from
+// totals.json: totals counts only blocks with a PBOT pavement record, and the
+// map also carries the ones measured from curb lines. Quoting the smaller
+// figure under the larger map is how a page starts lying quietly.
+export function renderSummary(stats, totals, universe) {
   let miles = 0, blocks = 0;
   for (const s of stats) { miles += s.miles; blocks += s.blocks; }
 
   $("heroMiles").textContent = fmt1(miles);
   $("heroSub").textContent =
-    `${blocks.toLocaleString()} blocks, ` +
-    `${((miles / totals.testable_miles) * 100).toFixed(1)}% of ` +
-    `${fmt1(totals.testable_miles)} testable miles`;
+    `${blocks.toLocaleString()} blocks of ${universe.blocks.toLocaleString()} eligible ` +
+    `(${fmt1(universe.miles)} miles two-way, residential and not arterial)`;
 
   // One table instead of a legend and a histogram: they were the same numbers
   // twice, and the swatch carries the ramp without a second chart.
@@ -56,10 +59,14 @@ export function renderReadout({ block, narrowing }) {
   }
 
   const rows = [
-    ["Widest point", `${block.bm} ft`],
-    ["Narrowest point", `${block.bn} ft`],
+    ["Narrowest point", `${block.wn} ft`],
+    ["Widest point", `${block.wx} ft`],
     ["Block length", `${block.bl.toLocaleString()} ft`],
-    ["Segments", String(block.nseg)],
+    [
+      "Edge line needed",
+      block.sh <= 0 ? "none" : `${block.sh} ft each side`,
+    ],
+    ["Width from", block.src === "pms" ? "PBOT pavement record" : "curb lines (no PBOT record)"],
   ];
   if (block.rw != null) rows.push(["Right of way", `${block.rw.toFixed(0)} ft`]);
 
@@ -71,15 +78,23 @@ export function renderReadout({ block, narrowing }) {
 }
 
 export function renderControls(state) {
-  $("thrWhole").value = String(state.wholeVal);
-  $("wholeVal").textContent = String(state.wholeVal);
-  $("opWhole").value = state.wholeOp;
-  $("useWhole").checked = state.wholeOn;
+  $("thr").value = String(state.val);
+  $("thrVal").textContent = String(state.val);
+  $("op").value = state.op;
+  $(state.reading === "part" ? "readPart" : "readWhole").checked = true;
 
-  $("thrPart").value = String(state.partVal);
-  $("partVal").textContent = String(state.partVal);
-  $("opPart").value = state.partOp;
-  $("usePart").checked = state.partOn;
+  // Above 18 ft the widest-point reading stops being a question about what
+  // qualifies and becomes one about what an edge line would reach, so the hint
+  // says which question is on screen.
+  const shoulder = Math.max(0, (state.val - 18) / 2);
+  $("thrHint").innerHTML =
+    state.reading === "part"
+      ? `The block drops to ${state.val} ft or less somewhere along it.`
+      : state.val <= 18
+        ? `The block is never wider than ${state.val} ft.`
+        : `The block never exceeds ${state.val} ft, so an edge line of ` +
+          `<strong>${shoulder.toFixed(1).replace(/\.0$/, "")} ft each side</strong> ` +
+          "would bring its travel way to 18.";
 }
 
 export function renderNotes(totals) {
@@ -87,5 +102,17 @@ export function renderNotes(totals) {
   $("noteNarrowings18").textContent = totals.narrowings_under_18.toLocaleString();
   $("noteUntestable").textContent =
     `${totals.untestable_blocks.toLocaleString()} blocks — ` +
-    `${fmt1(totals.untestable_miles)} miles — cannot be tested at all`;
+    `${fmt1(totals.untestable_miles)} miles — have no PBOT pavement width at all`;
 }
+
+// Derived figures the prose quotes, computed from the blocks actually shipped
+// rather than restated by hand, so the sentence cannot drift from the map.
+export function renderDerivedNotes(blocks) {
+  const miles = (pred) =>
+    fmt1(blocks.filter(pred).reduce((a, b) => a + b.bl, 0) / 5280);
+  $("noteSomewhere").textContent = miles((b) => b.wn <= 18);
+  $("noteConvertible").textContent = miles((b) => b.wx <= 24);
+  $("noteEligible").textContent = miles(() => true);
+  $("noteStrict").textContent = miles((b) => b.wx <= 18);
+}
+

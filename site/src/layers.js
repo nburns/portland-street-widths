@@ -1,9 +1,8 @@
-import { BOUNDARY, EXCLUDED, PINCH, widthColourExpression } from "./theme.js";
+import { BOUNDARY, PINCH, widthColourExpression } from "./theme.js";
 
 export const SRC = { blocks: "blocks", narrowings: "narrowings", boundary: "boundary" };
 export const LYR = {
   boundary: "boundary-line",
-  excluded: "blocks-excluded",
   blocks: "blocks-line",
   hover: "blocks-hover",
   narrowings: "narrowings-point",
@@ -11,11 +10,14 @@ export const LYR = {
 
 // Line weight has to survive a 6-level zoom range without becoming either a
 // hairline or a ribbon, hence the interpolation rather than a constant.
+// Weighted for the zoom the page opens at. A block is a few hundred feet, so
+// at city scale it is a tick a few pixels long: at the old weight 1,475 of
+// them rendered and the map still read as empty.
 const lineWidth = (base) => [
   "interpolate", ["linear"], ["zoom"],
-  10, base * 0.7,
-  13, base,
-  17, base * 3.2,
+  9, base * 1.1,
+  13, base * 1.7,
+  17, base * 4.5,
 ];
 
 // blocksData is passed in rather than fetched by URL: main.js already has it
@@ -33,29 +35,13 @@ export function addDataLayers(map, blocksData) {
     paint: { "line-color": BOUNDARY, "line-width": 1 },
   });
 
-  // Segments narrow enough on their own, in blocks that widen somewhere else.
-  // Only meaningful against the widest-point test - it is exactly what a
-  // block-level maximum throws away - so main.js hides it when that test is off.
-  map.addLayer({
-    id: LYR.excluded,
-    type: "line",
-    source: SRC.blocks,
-    filter: ["==", ["get", "block_id"], -1],
-    paint: {
-      "line-color": EXCLUDED,
-      "line-width": lineWidth(1.6),
-      "line-dasharray": [3, 2.2],
-      "line-opacity": 0.85,
-    },
-  });
-
   map.addLayer({
     id: LYR.blocks,
     type: "line",
     source: SRC.blocks,
     filter: ["==", ["get", "block_id"], -1],
     layout: { "line-cap": "round", "line-join": "round" },
-    paint: { "line-color": widthColourExpression("bm"), "line-width": lineWidth(2.1) },
+    paint: { "line-color": widthColourExpression("wn"), "line-width": lineWidth(2.1) },
   });
 
   // A separate layer rather than a paint change on the one above: the whole
@@ -88,24 +74,10 @@ export function addDataLayers(map, blocksData) {
   });
 }
 
-// The same predicate as blocks.js `passes`, expressed for MapLibre. Kept in
-// step with it by construction: both read the same four cases off bm and bn.
+// The same predicate as blocks.js `passes`, expressed for MapLibre.
 export function blockFilter(st) {
-  const clauses = ["all"];
-  if (st.wholeOn)
-    clauses.push(st.wholeOp === "le"
-      ? ["<=", ["get", "bm"], st.wholeVal]
-      : [">=", ["get", "bm"], st.wholeVal]);
-  if (st.partOn)
-    clauses.push(st.partOp === "le"
-      ? ["<=", ["get", "bn"], st.partVal]
-      : [">=", ["get", "bn"], st.partVal]);
-  return clauses.length === 1 ? ["literal", true] : clauses;
-}
-
-// Segments narrow enough on their own, in blocks that widen somewhere else -
-// only meaningful against a whole-block-at-most test, which is what it is the
-// complement of. main.js hides it otherwise.
-export function excludedFilter(st) {
-  return ["all", [">", ["get", "bm"], st.wholeVal], ["<=", ["get", "sm"], st.wholeVal]];
+  const prop = st.reading === "part" ? "wn" : "wx";
+  return st.op === "le"
+    ? ["<=", ["get", prop], st.val]
+    : [">=", ["get", prop], st.val];
 }

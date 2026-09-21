@@ -49,6 +49,14 @@ changed. `make clean-db` drops the database and `out/`, keeping the downloads.
 
 ## The site
 
+The map draws **PaveWidth**, not RoadWidth. ORS 801.450 defines the roadway
+"exclusive of the shoulder" and RoadWidth is PBOT's graded roadway, which on an
+unimproved street includes gravel shoulder; drawing it put the answer at 51.4
+miles against 74.1 for the field the statute points at. It also carries the
+blocks PBOT has no pavement record for at all but the curb lines can measure -
+7,981 blocks, 542 of the 1,067 untestable miles - with `src` on each block
+saying which kind of evidence its width is.
+
 `site/` is a Vite build of the map on MapLibre GL JS, live at
 **[nburns.github.io/portland-street-widths](https://nburns.github.io/portland-street-widths/)**
 and published by `.github/workflows/pages.yml` on every push that touches it.
@@ -330,11 +338,12 @@ ramps that drop from 60 ft to 8 ft at a gore curb.
 338 are on locally classified streets. 150 reach 18 ft or less. The map draws
 each one as the stretch of street it occupies, on a toggle.
 
-The map's two filters test opposite ends of a block's width profile, each in
-either direction: **whole block** is its widest point, **narrow part** its
-narrowest. That makes the conversion question askable directly - *whole block
-at least 19 ft* with *narrow part at most 18 ft* is 165 blocks over 21.4 miles
-that are too wide to qualify except where something already narrows them.
+The map picks one reading of "at any point" at a time, because the two are
+alternative constructions of the same sentence rather than conditions that
+stack. **Narrow somewhere** tests the block's narrowest point and is the
+default; **never wider** tests its widest. Pushing the width past 18 ft under
+*never wider* turns it into the striping question, since the shoulder an edge
+line would need is `(width - 18) / 2` per side.
 
 ### Outputs
 

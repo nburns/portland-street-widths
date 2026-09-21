@@ -1,0 +1,87 @@
+
+========== eligible universe: two-way, residential, locally classified ==========
+┌────────┬────────┬────────────────────┬───────────────────┐
+│ blocks │ miles  │ already_nrr_blocks │ already_nrr_miles │
+│ int64  │ double │       int64        │      double       │
+├────────┼────────┼────────────────────┼───────────────────┤
+│  13632 │ 1049.5 │                816 │              61.6 │
+└────────┴────────┴────────────────────┴───────────────────┘
+
+========== convertible by striping, by shoulder needed per side ==========
+┌─────────────────────────────┬────────┬────────┐
+│       shoulder_needed       │ blocks │ miles  │
+│           varchar           │ int64  │ double │
+├─────────────────────────────┼────────┼────────┤
+│ a. already 18 ft or less    │    816 │   61.6 │
+│ b. 1 ft each side           │    513 │   40.5 │
+│ c. 2 ft each side           │    286 │   25.4 │
+│ d. 3 ft each side           │   1558 │  123.4 │
+│ e. 4-5 ft each side         │   4775 │  375.2 │
+│ f. 6-7 ft each side         │   3390 │  265.8 │
+│ g. 8-9 ft each side         │   1981 │  134.5 │
+│ h. more than 9 ft each side │    313 │   23.3 │
+└─────────────────────────────┴────────┴────────┘
+
+========== the same by pavement width, which is what gets striped ==========
+┌─────────────┬────────┬────────┬───────────────────────┐
+│ pavement_ft │ blocks │ miles  │ shoulder_each_side_ft │
+│    int32    │ int64  │ double │        double         │
+├─────────────┼────────┼────────┼───────────────────────┤
+│          19 │     13 │    0.8 │                   0.5 │
+│          20 │    500 │   39.7 │                   1.0 │
+│          21 │     59 │    4.9 │                   1.5 │
+│          22 │    227 │   20.5 │                   2.0 │
+│          23 │     82 │    5.1 │                   2.5 │
+│          24 │   1476 │  118.2 │                   3.0 │
+│          25 │     64 │    4.5 │                   3.5 │
+│          26 │    533 │   39.4 │                   4.0 │
+│          27 │     49 │    3.2 │                   4.5 │
+│          28 │   4129 │  328.1 │                   5.0 │
+│          29 │     54 │    2.8 │                   5.5 │
+│          30 │   1480 │  114.7 │                   6.0 │
+│          31 │      7 │    0.5 │                   6.5 │
+│          32 │   1849 │  147.8 │                   7.0 │
+│          33 │     15 │    0.9 │                   7.5 │
+│          34 │     75 │    5.3 │                   8.0 │
+│          35 │     30 │    1.7 │                   8.5 │
+│          36 │   1861 │  126.6 │                   9.0 │
+│          37 │      7 │    0.9 │                   9.5 │
+│          38 │     30 │    2.7 │                  10.0 │
+│          39 │      1 │    0.0 │                  10.5 │
+│          40 │    142 │   10.0 │                  11.0 │
+└─────────────┴────────┴────────┴───────────────────────┘
+  22 rows                                     4 columns
+
+========== headline: cumulative eligible mileage at each shoulder width ==========
+┌───────────────────────┬────────┬────────┐
+│ shoulder_each_side_ft │ blocks │ miles  │
+│         int32         │ int64  │ double │
+├───────────────────────┼────────┼────────┤
+│                     0 │    816 │   61.6 │
+│                     1 │   1329 │  102.0 │
+│                     2 │   1615 │  127.4 │
+│                     3 │   3173 │  250.8 │
+│                     4 │   3770 │  294.7 │
+│                     5 │   7948 │  626.0 │
+│                     6 │   9482 │  743.5 │
+│                     7 │  11338 │  891.7 │
+│                     9 │  13319 │ 1026.2 │
+└───────────────────────┴────────┴────────┘
+
+========== what the non-arterial limit removes ==========
+┌──────────────┬──────────────────┬─────────────────┐
+│ local_blocks │ non_local_blocks │ non_local_miles │
+│    int64     │      int64       │     double      │
+├──────────────┼──────────────────┼─────────────────┤
+│          816 │                2 │             0.4 │
+└──────────────┴──────────────────┴─────────────────┘
+[90mWARNING:
+[00m[90mGDAL COPY TO with an SRS is sensitive to the coordinate axis order.
+DuckDB GEOMETRY uses [EASTING, NORTHING] (= LONGITUDE, LATITUDE) internally.
+Without 'geometry_always_xy', GDAL may interpret coordinates in authority-defined order
+(e.g., [LATITUDE, LONGITUDE] for EPSG:4326), causing incorrect output in KML and similar formats.
+To avoid unexpected results:
+ * 'SET geometry_always_xy = true' to always use [EASTING, NORTHING] (recommended)
+ * 'SET geometry_always_xy = false' to use authority-defined axis order
+
+[00m

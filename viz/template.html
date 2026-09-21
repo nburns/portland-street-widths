@@ -1,0 +1,660 @@
+<title>Portland's Narrow Streets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  --bg:      #eef2f3;
+  --surface: #ffffff;
+  --ink:     #0e1a1f;
+  --muted:   #5a7078;
+  --faint:   #8ba2a9;
+  --line:    #d2dcdf;
+  --accent:  #1f7d8a;
+  --shadow:  0 1px 2px rgba(14,26,31,.06), 0 8px 24px rgba(14,26,31,.07);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:      #0d1317;
+    --surface: #141d22;
+    --ink:     #e6f0f2;
+    --muted:   #8aa3ab;
+    --faint:   #62787f;
+    --line:    #233036;
+    --accent:  #5cc5cf;
+    --shadow:  0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"] {
+  --bg:      #0d1317;
+  --surface: #141d22;
+  --ink:     #e6f0f2;
+  --muted:   #8aa3ab;
+  --faint:   #62787f;
+  --line:    #233036;
+  --accent:  #5cc5cf;
+  --shadow:  0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+}
+
+/* The map canvas is an instrument panel: one committed dark ground in both
+   themes, so the width ramp is validated against a single surface instead of
+   two. Page chrome follows the viewer's theme. */
+:root {
+  --canvas:   #0b1418;
+  --canvas-2: #101e23;
+  --ctx:      #24343b;
+  --border:   #35505a;
+  --on-canvas:       #e6f2f3;
+  --on-canvas-muted: #8ba7af;
+  --excluded: #e0a340;
+  --w24: #33707a;
+  --w22: #3e8f99;
+  --w20: #4cb0ba;
+  --w18: #68cfd6;
+  --w16: #97e4e6;
+  --w14: #d0f4f2;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 28px 20px 64px; }
+
+/* ---- header ---- */
+header { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 28px 40px; margin-bottom: 20px; }
+.titles { flex: 1 1 340px; min-width: 0; }
+h1 {
+  font-family: "Familjen Grotesk", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(30px, 4.4vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.022em;
+  margin: 0 0 8px;
+  text-wrap: balance;
+}
+.standfirst { margin: 0; color: var(--muted); max-width: 56ch; }
+
+.hero { display: flex; align-items: baseline; gap: 10px; }
+.hero-num {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  font-size: clamp(44px, 7vw, 72px);
+  line-height: .9;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+}
+.hero-unit { font-size: 15px; color: var(--muted); }
+.hero-sub {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 6px;
+  text-align: right;
+}
+
+/* ---- map ---- */
+.map-shell {
+  position: relative;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  aspect-ratio: 16 / 11;
+  min-height: 380px;
+}
+canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+canvas.dragging { cursor: grabbing; }
+
+.panel {
+  position: absolute;
+  background: color-mix(in srgb, var(--canvas-2) 92%, transparent);
+  border: 1px solid #22343b;
+  border-radius: 3px;
+  padding: 13px 15px;
+  color: var(--on-canvas);
+  backdrop-filter: blur(6px);
+}
+.panel-tl { top: 14px; left: 14px; width: 232px; }
+.panel-bl { bottom: 14px; left: 14px; width: 232px; min-height: 84px; }
+.panel-br { bottom: 14px; right: 14px; width: 268px; }
+
+.eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--on-canvas-muted);
+  margin: 0 0 9px;
+}
+
+/* threshold control */
+.thr-val {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 21px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+input[type=range] { width: 100%; margin: 6px 0 2px; accent-color: #68cfd6; }
+input[type=range]:focus-visible { outline: 2px solid #97e4e6; outline-offset: 3px; }
+.thr-scale {
+  display: flex; justify-content: space-between;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 10px; color: var(--on-canvas-muted);
+}
+
+/* legend */
+.legend { margin-top: 14px; display: grid; gap: 3px; }
+.legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.swatch { width: 22px; height: 4px; border-radius: 2px; flex: none; }
+.legend-num {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--on-canvas-muted);
+  margin-left: auto;
+  font-size: 11px;
+}
+.legend-note { font-size: 11px; color: var(--on-canvas-muted); margin-top: 8px; line-height: 1.4; }
+
+/* toggles */
+.toggles { margin-top: 13px; display: grid; gap: 7px; }
+.tog { display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; }
+.tog input { accent-color: #68cfd6; margin: 0; }
+.tog:focus-within { outline: 2px solid #97e4e6; outline-offset: 3px; border-radius: 2px; }
+.dash-key { width: 22px; height: 0; border-top: 2px dashed var(--excluded); flex: none; }
+
+/* readout */
+.readout-name { font-weight: 600; font-size: 14px; line-height: 1.25; }
+.readout-grid {
+  margin-top: 8px;
+  display: grid; grid-template-columns: auto auto; gap: 2px 12px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+}
+.readout-grid dt { color: var(--on-canvas-muted); }
+.readout-grid dd { margin: 0; text-align: right; }
+.readout-empty { color: var(--on-canvas-muted); font-size: 12px; }
+
+/* histogram */
+.bars { display: grid; gap: 5px; }
+.bar-row {
+  display: grid; grid-template-columns: 42px 1fr 52px;
+  align-items: center; gap: 8px;
+  border: 0; background: none; padding: 2px 0; margin: 0;
+  color: inherit; font: inherit; cursor: pointer; text-align: left;
+  border-radius: 2px;
+}
+.bar-row:focus-visible { outline: 2px solid #97e4e6; outline-offset: 2px; }
+.bar-label, .bar-num {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  color: var(--on-canvas-muted);
+}
+.bar-num { text-align: right; }
+.bar-track { height: 9px; background: #1b2c33; border-radius: 2px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 2px; transition: opacity .12s ease; }
+.bar-row[aria-pressed="false"] .bar-fill { opacity: .28; }
+.bar-row[aria-pressed="false"] .bar-num { opacity: .5; }
+
+/* ---- prose ---- */
+.notes { margin-top: 36px; display: grid; gap: 26px; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+.note h2 {
+  font-family: "Familjen Grotesk", ui-sans-serif, sans-serif;
+  font-size: 15px; font-weight: 600; margin: 0 0 7px; letter-spacing: -0.008em;
+}
+.note p { margin: 0 0 9px; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+.note p:last-child { margin-bottom: 0; }
+.note strong { color: var(--ink); font-weight: 600; }
+mono, .mono {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: .92em;
+}
+.caveat { border-left: 2px solid var(--accent); padding-left: 13px; }
+footer {
+  margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line);
+  color: var(--faint); font-size: 12px;
+}
+footer a { color: var(--muted); }
+
+@media (max-width: 860px) {
+  .map-shell { aspect-ratio: 3 / 4; }
+  .panel { position: static; width: auto; backdrop-filter: none; }
+  .panel-tl, .panel-bl, .panel-br { width: auto; }
+  .stack { display: grid; gap: 10px; margin-top: 10px; }
+  .hero-sub { text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="titles">
+      <h1>Portland's Narrow Streets</h1>
+      <p class="standfirst">
+        Blocks where the roadway never exceeds the width you set — measured
+        curb to curb, at every point between two intersections.
+      </p>
+    </div>
+    <div>
+      <div class="hero">
+        <span class="hero-num" id="heroMiles">51.4</span>
+        <span class="hero-unit">centerline miles</span>
+      </div>
+      <div class="hero-sub" id="heroSub">674 blocks · 3.4% of 1,512.6 testable miles</div>
+    </div>
+  </header>
+
+  <div class="map-shell" id="shell">
+    <canvas id="map"></canvas>
+
+    <div class="panel panel-tl">
+      <p class="eyebrow">Maximum roadway width</p>
+      <div class="thr-val"><span id="thrVal">18</span> ft</div>
+      <input type="range" id="thr" min="12" max="24" step="1" value="18"
+             aria-label="Maximum roadway width in feet">
+      <div class="thr-scale"><span>12</span><span>18</span><span>24</span></div>
+
+      <div class="legend" id="legend"></div>
+      <p class="legend-note">Lighter is narrower. A block is drawn only when it
+        stays at or under the threshold along its whole length.</p>
+
+      <div class="toggles">
+        <label class="tog"><input type="checkbox" id="togExcluded">
+          <span class="dash-key"></span> Narrow but block widens</label>
+        <label class="tog"><input type="checkbox" id="togContext" checked>
+          Arterials for context</label>
+      </div>
+    </div>
+
+    <div class="panel panel-bl" id="readout">
+      <p class="eyebrow">Block detail</p>
+      <p class="readout-empty">Point at a highlighted block.</p>
+    </div>
+
+    <div class="panel panel-br">
+      <p class="eyebrow">Miles by block maximum</p>
+      <div class="bars" id="bars"></div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <h2>What counts as a block</h2>
+      <p>A centerline segment is not a block. The source splits runs mid-block
+        at jurisdiction and address-range breaks — <strong>28,970 of 112,070
+        segments</strong> touch a node where exactly two streets meet, which is
+        a continuation, not an intersection.</p>
+      <p>Blocks here are rebuilt from network topology: node degree over the
+        full four-county network, segments joined at degree-2 nodes, connected
+        components. 39,103 Portland segments become
+        <strong>34,379 blocks</strong>.</p>
+    </div>
+
+    <div class="note">
+      <h2>Why the unit matters</h2>
+      <p>Tested per segment, the 18 ft answer is <span class="mono">64.7</span>
+        miles. Tested per block, as written, it is
+        <span class="mono">51.4</span> — a 26% difference.</p>
+      <p>The gap is <strong>13.3 miles</strong> of genuinely narrow roadway that
+        sits in blocks widening somewhere along their length. Turn on
+        <em>narrow but block widens</em> to see it.</p>
+    </div>
+
+    <div class="note caveat">
+      <h2>These are floors, not totals</h2>
+      <p>A block is testable only when every segment in it has a PBOT pavement
+        width on record. <strong>13,974 blocks — 1,067 miles — cannot be tested
+        at all</strong>, and the gap is concentrated in local streets, private
+        roads and driveways, exactly where narrow streets live.</p>
+      <p>Widths are <span class="mono">RoadWidth</span>, the graded roadway.
+        Using <span class="mono">PaveWidth</span> instead gives
+        <span class="mono">74.1</span> miles at 18 ft; the two fields are
+        undocumented, so the reading moves the answer.</p>
+    </div>
+  </div>
+
+  <footer>
+    Roadway widths from PBOT's Pavement Management System; centerlines and city
+    boundary from Portland open data. Block topology and mileage computed
+    locally in DuckDB. Widths in feet, lengths in centerline miles.
+  </footer>
+</div>
+
+<script type="application/json" id="data">__DATA__</script>
+
+<script>
+(function () {
+  "use strict";
+
+  const DATA = JSON.parse(document.getElementById("data").textContent);
+  const TESTABLE_MILES = 1512.6;
+
+  // Ramp keyed to the block maximum. Lightness rises as the street narrows, so
+  // salience follows the subject; every step clears 3.3:1 on the canvas ground.
+  const BINS = [
+    { max: 14, color: "#d0f4f2", label: "≤ 14" },
+    { max: 16, color: "#97e4e6", label: "15–16" },
+    { max: 18, color: "#68cfd6", label: "17–18" },
+    { max: 20, color: "#4cb0ba", label: "19–20" },
+    { max: 22, color: "#3e8f99", label: "21–22" },
+    { max: 24, color: "#33707a", label: "23–24" }
+  ];
+  const CANVAS = "#0b1418", CTX = "#24343b", BORDER = "#35505a", EXCLUDED = "#e0a340";
+
+  const binFor = (w) => BINS.find((b) => w <= b.max) || BINS[BINS.length - 1];
+
+  // ---- projection: web mercator, then fit to the canvas box ----
+  const merc = (lon, lat) => [
+    lon / 360 + 0.5,
+    0.5 - Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI / 180) / 2)) / (2 * Math.PI)
+  ];
+
+  function projectAll() {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    const seen = (p) => {
+      for (let i = 0; i < p.length; i += 2) {
+        const m = merc(p[i], p[i + 1]);
+        p[i] = m[0]; p[i + 1] = m[1];
+        if (m[0] < x0) x0 = m[0];
+        if (m[0] > x1) x1 = m[0];
+        if (m[1] < y0) y0 = m[1];
+        if (m[1] > y1) y1 = m[1];
+      }
+    };
+    DATA.boundary.forEach(seen);
+    DATA.major.forEach(seen);
+    DATA.blocks.forEach((b) => b.s.forEach((s) => s.p.forEach(seen)));
+    return { x0, y0, x1, y1 };
+  }
+  const EXT = projectAll();
+
+  // ---- hit index: uniform grid over mercator space ----
+  const GRID = 140;
+  const cellW = (EXT.x1 - EXT.x0) / GRID, cellH = (EXT.y1 - EXT.y0) / GRID;
+  const index = new Map();
+  const cellKey = (cx, cy) => cx * 4096 + cy;
+  DATA.blocks.forEach((blk, bi) => {
+    blk.s.forEach((seg, si) => {
+      seg.p.forEach((part) => {
+        for (let i = 0; i < part.length - 2; i += 2) {
+          const cx = Math.floor((part[i] - EXT.x0) / cellW);
+          const cy = Math.floor((part[i + 1] - EXT.y0) / cellH);
+          for (let dx = 0; dx <= 1; dx++) for (let dy = 0; dy <= 1; dy++) {
+            const k = cellKey(cx + dx - 0, cy + dy - 0);
+            let a = index.get(k);
+            if (!a) index.set(k, a = []);
+            a.push([bi, si, part, i]);
+          }
+        }
+      });
+    });
+  });
+
+  // ---- view state ----
+  const cv = document.getElementById("map");
+  const g = cv.getContext("2d");
+  const view = { k: 1, tx: 0, ty: 0 };   // applied on top of the fit transform
+  let fit = { s: 1, ox: 0, oy: 0 }, W = 0, H = 0, dpr = 1;
+  let threshold = 18, showExcluded = false, showContext = true, hover = null;
+
+  function resize() {
+    const r = cv.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = Math.max(1, Math.round(r.width));
+    H = Math.max(1, Math.round(r.height));
+    cv.width = W * dpr; cv.height = H * dpr;
+    const pad = 16;
+    const s = Math.min((W - pad * 2) / (EXT.x1 - EXT.x0), (H - pad * 2) / (EXT.y1 - EXT.y0));
+    fit = {
+      s,
+      ox: (W - (EXT.x1 - EXT.x0) * s) / 2 - EXT.x0 * s,
+      oy: (H - (EXT.y1 - EXT.y0) * s) / 2 - EXT.y0 * s
+    };
+    draw();
+  }
+
+  const sx = (x) => (x * fit.s + fit.ox) * view.k + view.tx;
+  const sy = (y) => (y * fit.s + fit.oy) * view.k + view.ty;
+  const ux = (px) => ((px - view.tx) / view.k - fit.ox) / fit.s;
+  const uy = (py) => ((py - view.ty) / view.k - fit.oy) / fit.s;
+
+  function strokeParts(parts, width) {
+    g.lineWidth = width;
+    g.beginPath();
+    for (const p of parts) {
+      g.moveTo(sx(p[0]), sy(p[1]));
+      for (let i = 2; i < p.length; i += 2) g.lineTo(sx(p[i]), sy(p[i + 1]));
+    }
+    g.stroke();
+  }
+
+  function draw() {
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = CANVAS;
+    g.fillRect(0, 0, W, H);
+    g.lineJoin = g.lineCap = "round";
+
+    g.strokeStyle = BORDER;
+    g.setLineDash([]);
+    strokeParts(DATA.boundary, 1);
+
+    if (showContext) {
+      g.strokeStyle = CTX;
+      strokeParts(DATA.major, Math.max(0.6, 0.9 * Math.sqrt(view.k)));
+    }
+
+    const lw = Math.max(1.35, 2.1 * Math.sqrt(view.k));
+
+    if (showExcluded) {
+      g.strokeStyle = EXCLUDED;
+      g.setLineDash([4, 3]);
+      const parts = [];
+      for (const b of DATA.blocks) {
+        if (b.bm <= threshold) continue;
+        for (const s of b.s) if (s.m <= threshold) parts.push(...s.p);
+      }
+      strokeParts(parts, lw);
+      g.setLineDash([]);
+    }
+
+    // qualifying blocks, drawn widest-first so the narrowest sit on top
+    for (let bi = BINS.length - 1; bi >= 0; bi--) {
+      const bin = BINS[bi];
+      const lo = bi === 0 ? 0 : BINS[bi - 1].max;
+      const parts = [];
+      for (const b of DATA.blocks) {
+        if (b.bm > threshold || b.bm <= lo || b.bm > bin.max) continue;
+        for (const s of b.s) parts.push(...s.p);
+      }
+      if (!parts.length) continue;
+      g.strokeStyle = bin.color;
+      strokeParts(parts, lw);
+    }
+
+    if (hover !== null) {
+      const b = DATA.blocks[hover];
+      const parts = [];
+      for (const s of b.s) parts.push(...s.p);
+      g.strokeStyle = "#ffffff";
+      strokeParts(parts, lw + 3.5);
+      g.strokeStyle = binFor(b.bm).color;
+      strokeParts(parts, lw + 0.5);
+    }
+  }
+
+  // ---- hover ----
+  function distToSeg(px, py, ax, ay, bx, by) {
+    const dx = bx - ax, dy = by - ay;
+    const L = dx * dx + dy * dy;
+    let t = L ? ((px - ax) * dx + (py - ay) * dy) / L : 0;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const qx = ax + t * dx - px, qy = ay + t * dy - py;
+    return Math.sqrt(qx * qx + qy * qy);
+  }
+
+  function pick(px, py) {
+    const mx = ux(px), my = uy(py);
+    const cx = Math.floor((mx - EXT.x0) / cellW), cy = Math.floor((my - EXT.y0) / cellH);
+    let best = null, bestD = Infinity;
+    const tol = 9 / (fit.s * view.k);
+    for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
+      const a = index.get(cellKey(cx + dx, cy + dy));
+      if (!a) continue;
+      for (const [bi, si, part, i] of a) {
+        if (DATA.blocks[bi].bm > threshold) continue;
+        const d = distToSeg(mx, my, part[i], part[i + 1], part[i + 2], part[i + 3]);
+        if (d < bestD) { bestD = d; best = bi; }
+      }
+    }
+    return bestD <= tol ? best : null;
+  }
+
+  const readout = document.getElementById("readout");
+  function renderReadout() {
+    if (hover === null) {
+      readout.innerHTML = '<p class="eyebrow">Block detail</p>' +
+        '<p class="readout-empty">Point at a highlighted block.</p>';
+      return;
+    }
+    const b = DATA.blocks[hover];
+    const rows = [
+      ["Roadway max", b.bm + " ft"],
+      ["Roadway min", Math.min(...b.s.map((s) => s.m)) + " ft"],
+      ["Block length", b.bl.toLocaleString() + " ft"],
+      ["Segments", String(b.s.length)]
+    ];
+    const rw = b.s.map((s) => s.r).filter((v) => v !== null);
+    if (rw.length) rows.push(["Right of way", Math.max(...rw).toFixed(0) + " ft"]);
+    readout.innerHTML =
+      '<p class="eyebrow">Block detail</p>' +
+      '<p class="readout-name">' + esc(b.n) + "</p>" +
+      '<dl class="readout-grid">' +
+      rows.map((r) => "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>").join("") +
+      "</dl>";
+  }
+  const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+  // ---- summary + legend + histogram ----
+  const fmt1 = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+  function binStats() {
+    return BINS.map((bin, i) => {
+      const lo = i === 0 ? 0 : BINS[i - 1].max;
+      let miles = 0, blocks = 0;
+      for (const b of DATA.blocks) {
+        if (b.bm > lo && b.bm <= bin.max) { miles += b.bl / 5280; blocks++; }
+      }
+      return { bin, miles, blocks, active: bin.max <= threshold };
+    });
+  }
+
+  function renderSummary() {
+    const stats = binStats();
+    let miles = 0, blocks = 0;
+    for (const s of stats) if (s.active) { miles += s.miles; blocks += s.blocks; }
+    document.getElementById("heroMiles").textContent = fmt1(miles);
+    document.getElementById("heroSub").textContent =
+      blocks.toLocaleString() + " blocks · " +
+      (miles / TESTABLE_MILES * 100).toFixed(1) + "% of " + fmt1(TESTABLE_MILES) + " testable miles";
+
+    document.getElementById("legend").innerHTML = stats.map((s) =>
+      '<div class="legend-row" style="opacity:' + (s.active ? 1 : .34) + '">' +
+      '<span class="swatch" style="background:' + s.bin.color + '"></span>' +
+      "<span>" + s.bin.label + " ft</span>" +
+      '<span class="legend-num">' + fmt1(s.miles) + " mi</span></div>"
+    ).join("");
+
+    const peak = Math.max(...stats.map((s) => s.miles));
+    document.getElementById("bars").innerHTML = stats.map((s) =>
+      '<button class="bar-row" type="button" aria-pressed="' + s.active +
+      '" data-w="' + s.bin.max + '">' +
+      '<span class="bar-label">' + s.bin.label + "</span>" +
+      '<span class="bar-track"><span class="bar-fill" style="width:' +
+      (s.miles / peak * 100).toFixed(1) + "%;background:" + s.bin.color + '"></span></span>' +
+      '<span class="bar-num">' + fmt1(s.miles) + "</span></button>"
+    ).join("");
+    document.querySelectorAll(".bar-row").forEach((el) => {
+      el.addEventListener("click", () => setThreshold(+el.dataset.w));
+    });
+  }
+
+  function setThreshold(v) {
+    threshold = v;
+    document.getElementById("thr").value = String(v);
+    document.getElementById("thrVal").textContent = String(v);
+    if (hover !== null && DATA.blocks[hover].bm > threshold) { hover = null; renderReadout(); }
+    renderSummary();
+    draw();
+  }
+
+  // ---- events ----
+  document.getElementById("thr").addEventListener("input", (e) => setThreshold(+e.target.value));
+  document.getElementById("togExcluded").addEventListener("change", (e) => {
+    showExcluded = e.target.checked; draw();
+  });
+  document.getElementById("togContext").addEventListener("change", (e) => {
+    showContext = e.target.checked; draw();
+  });
+
+  let drag = null;
+  cv.addEventListener("pointerdown", (e) => {
+    drag = { x: e.clientX, y: e.clientY, tx: view.tx, ty: view.ty };
+    cv.classList.add("dragging");
+    cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener("pointermove", (e) => {
+    const r = cv.getBoundingClientRect();
+    if (drag) {
+      view.tx = drag.tx + (e.clientX - drag.x);
+      view.ty = drag.ty + (e.clientY - drag.y);
+      draw();
+      return;
+    }
+    const h = pick(e.clientX - r.left, e.clientY - r.top);
+    if (h !== hover) { hover = h; renderReadout(); draw(); }
+  });
+  const endDrag = () => { drag = null; cv.classList.remove("dragging"); };
+  cv.addEventListener("pointerup", endDrag);
+  cv.addEventListener("pointercancel", endDrag);
+  cv.addEventListener("pointerleave", () => {
+    if (hover !== null) { hover = null; renderReadout(); draw(); }
+  });
+
+  cv.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const r = cv.getBoundingClientRect();
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    const f = Math.exp(-e.deltaY * 0.0016);
+    const k2 = Math.min(64, Math.max(1, view.k * f));
+    const a = k2 / view.k;
+    view.tx = px - a * (px - view.tx);
+    view.ty = py - a * (py - view.ty);
+    view.k = k2;
+    if (view.k === 1) { view.tx = 0; view.ty = 0; }
+    draw();
+  }, { passive: false });
+
+  new ResizeObserver(resize).observe(document.getElementById("shell"));
+  renderSummary();
+  renderReadout();
+  resize();
+})();
+</script>

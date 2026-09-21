@@ -1,0 +1,785 @@
+{
+  "_comment": "Fingerprint of the data/raw/ fetch the committed results were built from. Regenerate with fetch/verify.py --write.",
+  "files": {
+    "city_boundaries.geojson": {
+      "bytes": 5922868,
+      "sha256": "6bf449d22713b196802e1d85d6d8574b4ffaeda9c9553f6d9aa898cb5ec9cbde"
+    },
+    "curb_extension/page_0000.geojson": {
+      "bytes": 117503,
+      "sha256": "d81f6e9d85437db4587d6c743d557dbdf002ad3297ee95bdb9274f52acd5b836"
+    },
+    "curb_extension/page_0001.geojson": {
+      "bytes": 119286,
+      "sha256": "bdd37096d401e15a06b9d4cbc0ed91f4b6907649e9fba9cc9102ead2b0b89a1e"
+    },
+    "curb_extension/page_0002.geojson": {
+      "bytes": 118237,
+      "sha256": "a541ffe7af8800313ddb9b05ab367957125e77179d6fd6c86c73da932d6792f4"
+    },
+    "curb_extension/page_0003.geojson": {
+      "bytes": 120268,
+      "sha256": "7a681c6f498d1d1d58d77a4bbae42341c626b4b46d4d6dc714f4cb61c77ec715"
+    },
+    "curb_extension/page_0004.geojson": {
+      "bytes": 118952,
+      "sha256": "57f9e011be9c86cf915d92e264a413538f00515b08e913a671ee916bb5941b44"
+    },
+    "curb_extension/page_0005.geojson": {
+      "bytes": 118179,
+      "sha256": "e33e0aa619160e39d2ac36a03a5c723713c13de72e136f842ac2cd5d5c539514"
+    },
+    "curb_extension/page_0006.geojson": {
+      "bytes": 120006,
+      "sha256": "65ac32a2dd5bb692dc184349932dfbe88c0426d74db1e04cb22815b1119fe612"
+    },
+    "curb_extension/page_0007.geojson": {
+      "bytes": 119557,
+      "sha256": "2d930fe65d73011b65f2d64ff3e6b155eeea1381bd3878899ab0a942b67d35d1"
+    },
+    "curb_extension/page_0008.geojson": {
+      "bytes": 119091,
+      "sha256": "9e5a5a24dddbbd10912a312e2751b22b15d9342f05611da12eb0dbd90fb9be8f"
+    },
+    "curb_extension/page_0009.geojson": {
+      "bytes": 118825,
+      "sha256": "a62dfdfec67e2301d5ff93cffca45027ef8af2d516fc46d894b36fe1f5f7fea7"
+    },
+    "curb_extension/page_0010.geojson": {
+      "bytes": 119973,
+      "sha256": "adfe9a56cd9a8e919a9e0d331dcd5f9e9d6a35fa57f72e7c447fc0fc86fa846f"
+    },
+    "curb_extension/page_0011.geojson": {
+      "bytes": 119604,
+      "sha256": "f6df540fa4d445b169c04644f96359d2040066a18a9c31f14999cd7512e32ced"
+    },
+    "curb_extension/page_0012.geojson": {
+      "bytes": 120026,
+      "sha256": "ed39b4508b0e96af932eb223187d9d18ef5a7686401ca5c6728a2eb4443f7f95"
+    },
+    "curb_extension/page_0013.geojson": {
+      "bytes": 118762,
+      "sha256": "3dfc6e0ea3221ef3d0cc8ae8004ba24178a0f3b707d8d48d5e5e815b29972588"
+    },
+    "curb_extension/page_0014.geojson": {
+      "bytes": 121338,
+      "sha256": "4920c46ea4e96da75c74ae38a817291fbb5f5dbcca1963a91885641285422cef"
+    },
+    "curb_extension/page_0015.geojson": {
+      "bytes": 120718,
+      "sha256": "9775bb9451987e99a1ab930af013910ab912cfc11550bca7eb3583e295131f60"
+    },
+    "curb_extension/page_0016.geojson": {
+      "bytes": 120843,
+      "sha256": "5920edd4ea7dbba223e7366ad82b84685cbdef8177cf0d3ba379e38e4cf3bd22"
+    },
+    "curb_extension/page_0017.geojson": {
+      "bytes": 121243,
+      "sha256": "0c5083fdc83c579142e4a05013be87679170c8ee1ef914d7ccfc4769a2378c6f"
+    },
+    "curb_extension/page_0018.geojson": {
+      "bytes": 120202,
+      "sha256": "917af69c0f297f24f53e39940a1e0497530c939bc1bc4027f459c54b86e3ec54"
+    },
+    "curb_extension/page_0019.geojson": {
+      "bytes": 120089,
+      "sha256": "4162750ddfa8450e7fcb65f85cdb192e665e634555f92dd18c6607ea491aeb01"
+    },
+    "curb_extension/page_0020.geojson": {
+      "bytes": 119124,
+      "sha256": "70a7e4a23f25701e9bebeac9cfb18e34b1dab42dd7ca159263b4fccc657e8879"
+    },
+    "curb_extension/page_0021.geojson": {
+      "bytes": 118117,
+      "sha256": "ce7a4a6a4a85c77d9b1810060951733c4efcf643550467e632264ebe64b0c7a9"
+    },
+    "curb_extension/page_0022.geojson": {
+      "bytes": 118867,
+      "sha256": "30d793c433d4a06ede0f92e1caae6d8c0a6b5ba41080affa40fe8d5cb1ca9e50"
+    },
+    "curb_extension/page_0023.geojson": {
+      "bytes": 119566,
+      "sha256": "6bbaef449172b9cf17a7c45250a57bde9e3a340aeace29d7c44f06196aa8f366"
+    },
+    "curb_extension/page_0024.geojson": {
+      "bytes": 118617,
+      "sha256": "3cf589be6121c9d81915f2588f2de077d12ceae91174bbb3fec5502b0027d4c1"
+    },
+    "curb_extension/page_0025.geojson": {
+      "bytes": 119717,
+      "sha256": "0b541ba1d1e431027e9e8fcab26da4f1f961f8f931ec33612ee38a4e2b8ccb93"
+    },
+    "curb_extension/page_0026.geojson": {
+      "bytes": 121603,
+      "sha256": "05fd1aeabbf72fa8ac8eb62b69cdebde79a0eed66d0aa7ffa5a793ad1c2bd255"
+    },
+    "curb_extension/page_0027.geojson": {
+      "bytes": 120538,
+      "sha256": "e22b51254b6d5d765d0debd571943106e69bf3c814c670ecb1a762bf8e8ba422"
+    },
+    "curb_extension/page_0028.geojson": {
+      "bytes": 118492,
+      "sha256": "0b035ebdfbcf8801a48f0b9eb10b60070d2ff871144268731696932de72e0051"
+    },
+    "curb_extension/page_0029.geojson": {
+      "bytes": 118871,
+      "sha256": "583786a07b4c4861d9d8547802600b99216697c1c0d7b1f10c3bd8a6e838bc2f"
+    },
+    "curb_extension/page_0030.geojson": {
+      "bytes": 120335,
+      "sha256": "c18c7f338eda1a9b0e7f6224b6d63349ca84a31c954561063a7756760f785ba3"
+    },
+    "curb_extension/page_0031.geojson": {
+      "bytes": 119529,
+      "sha256": "01f01f07e838ae94052e214ec68bcf30c89666746833f9eb6cc2fdc7e703a4fc"
+    },
+    "curb_extension/page_0032.geojson": {
+      "bytes": 120443,
+      "sha256": "0b60b45e2da574124eae2c77354d0d766775b58f0288f2372e474f1b4776697c"
+    },
+    "curb_extension/page_0033.geojson": {
+      "bytes": 118222,
+      "sha256": "ef98f892ec7bf9c9e682e6744666f6432141fe05255ae113a09e3b79c5168272"
+    },
+    "curb_extension/page_0034.geojson": {
+      "bytes": 119536,
+      "sha256": "7101b41833aed318d23b277e5c15032aa48a7f5845a1c5a268f061a4b6ee3b60"
+    },
+    "curb_extension/page_0035.geojson": {
+      "bytes": 120980,
+      "sha256": "a9f6e0a58ccd845e5056a89463a6f5cd480d9b493be3dbe2cc26851119ca7e1f"
+    },
+    "curb_extension/page_0036.geojson": {
+      "bytes": 118742,
+      "sha256": "c6c62df83a8187f69e1a5f0e3fb6a1257a287f369385c4156ea045e0002371c8"
+    },
+    "curb_extension/page_0037.geojson": {
+      "bytes": 119419,
+      "sha256": "12a6ee15d4230a56f539b53390fd6c43c08ebcb1663c458fa3a92b124292d3c5"
+    },
+    "curb_extension/page_0038.geojson": {
+      "bytes": 119942,
+      "sha256": "7c8c84df0dffeef13bad0f7ca6550edbefd0b29f063e9ff08f40744014e4e75e"
+    },
+    "curb_extension/page_0039.geojson": {
+      "bytes": 120624,
+      "sha256": "e2a3b9ee1471aa577d3f4853452cb7f9b2889fce61a411bc038afed4d9d0be8c"
+    },
+    "curb_extension/page_0040.geojson": {
+      "bytes": 119448,
+      "sha256": "7db37fe5156e9f5cefb3c025bcedac781bfb37bb3b74368b0aa69e7c9159d202"
+    },
+    "curb_extension/page_0041.geojson": {
+      "bytes": 118770,
+      "sha256": "fc7dbd0cf78abb2897c1cd9741352069fbc88669121af689d8e40202b3e4ece3"
+    },
+    "curb_extension/page_0042.geojson": {
+      "bytes": 119196,
+      "sha256": "1965e96347fa5461bd00acd9584c045f93c7b3e2dd199392a8bf5ca1d19914b8"
+    },
+    "curb_extension/page_0043.geojson": {
+      "bytes": 119952,
+      "sha256": "79947c4cd874df80cfc411490f9bfa627eddae97174b59861dd32f0a5e29f477"
+    },
+    "curb_extension/page_0044.geojson": {
+      "bytes": 118675,
+      "sha256": "65297573335fde0bcdb13a56133c31f86bd6b0df728f8395a4c7081f1c4e1465"
+    },
+    "curb_extension/page_0045.geojson": {
+      "bytes": 60763,
+      "sha256": "81a1d4ccc65741294d8f9ec7c5c00531595e15cf237d38c7aac2a0627162798d"
+    },
+    "curbs.geojson": {
+      "bytes": 103151115,
+      "sha256": "a8e18b0f0aab7a75483d48ba04344b2a90d4a17808670c0edb37994085e9d732"
+    },
+    "pavement_management.geojson": {
+      "bytes": 36097531,
+      "sha256": "81bc57c7b1af74ac89ae15722b6bf3c2adde8ddd83e52add57496e090c50259e"
+    },
+    "sidewalks.geojson": {
+      "bytes": 488944904,
+      "sha256": "17e6299c76ef9ecf40425544516c749daf1bfff6db4f722d3d28032f9c3d5be3"
+    },
+    "streets.geojson": {
+      "bytes": 128188075,
+      "sha256": "c25805b5b832a6310c2e02dc13d8cb86e2834bc69256e14d06d39ac6400543fb"
+    },
+    "taxlots/page_0000.geojson": {
+      "bytes": 644103,
+      "sha256": "83a0ff8bbcf35c4bb668a94ce5a4b1d9de28ef3367772424c36de1410253c694"
+    },
+    "taxlots/page_0001.geojson": {
+      "bytes": 641319,
+      "sha256": "708e4c27a2e3c731a9389fb196d8b8ff5f6f3a6e8f33df81a53301b5e675923f"
+    },
+    "taxlots/page_0002.geojson": {
+      "bytes": 666090,
+      "sha256": "a5c7064a8a6cad909dad04a766871a137387c09e96767b52bb9e5d5853faa3e7"
+    },
+    "taxlots/page_0003.geojson": {
+      "bytes": 646256,
+      "sha256": "951a86136d8bebf049f61726b37197fec486460bf10b51992dbec2837ce96581"
+    },
+    "taxlots/page_0004.geojson": {
+      "bytes": 648458,
+      "sha256": "f4a90827d0ae34a3dd58fdce9a4ad332bf35c4628fc08bef74469990bd4473cf"
+    },
+    "taxlots/page_0005.geojson": {
+      "bytes": 671144,
+      "sha256": "4f303a37cabb365a7cd19a6718200aeecb3ca7028b018f59ff0af8a50b3c6859"
+    },
+    "taxlots/page_0006.geojson": {
+      "bytes": 674408,
+      "sha256": "19d63c0b7c919af10518ee52963d3bc035303e3d0f3a25db80c49c52384283fe"
+    },
+    "taxlots/page_0007.geojson": {
+      "bytes": 662807,
+      "sha256": "c015848fb093337b4f191ae5fc74409cab5837e5428a7651b93bc53bd2f3d161"
+    },
+    "taxlots/page_0008.geojson": {
+      "bytes": 662009,
+      "sha256": "3769402701af74050a43eaa6f0ba4f1a59d7351888bbe45386c54f01d434346d"
+    },
+    "taxlots/page_0009.geojson": {
+      "bytes": 673339,
+      "sha256": "84d12a79a49c988e32dec4d00fc14487230f215cb0b4fce7edb97d5dda662a60"
+    },
+    "taxlots/page_0010.geojson": {
+      "bytes": 656747,
+      "sha256": "9f7fa19cfed467bff1d7dd31b94afb7a7c3dc4ee9772a4fb03ee170205a3be74"
+    },
+    "taxlots/page_0011.geojson": {
+      "bytes": 1022428,
+      "sha256": "6b0e2a402129efe391ceeafb57a4dd483785ef77efe688399af311cd30fd8dd1"
+    },
+    "taxlots/page_0012.geojson": {
+      "bytes": 744341,
+      "sha256": "b65f24ec51d92bbfc992be8fd49f61b707686be25591759e95834019de0218bb"
+    },
+    "taxlots/page_0013.geojson": {
+      "bytes": 775419,
+      "sha256": "6c98b40d20355f227d3c4c20ddef18f636991a92915f6dddb0b5833fe9a038cf"
+    },
+    "taxlots/page_0014.geojson": {
+      "bytes": 673081,
+      "sha256": "f5650657411f3017f1f8bbd61e7189cf3778c11b5bb0cce8f7f6933551efa2d2"
+    },
+    "taxlots/page_0015.geojson": {
+      "bytes": 708399,
+      "sha256": "f3f82bfa45a04d82accf69861a0f3f8e4e1e0ea4cf051d61f2a492516f32fb3e"
+    },
+    "taxlots/page_0016.geojson": {
+      "bytes": 671616,
+      "sha256": "650e836b7f6ab7dce397f99bd6cd75ddaa4e83f8f8b745098f4bb8319599adad"
+    },
+    "taxlots/page_0017.geojson": {
+      "bytes": 698378,
+      "sha256": "b60e3726c4119ee623426749d51e122fdab2da7082f9c55a8fa2d45254186a42"
+    },
+    "taxlots/page_0018.geojson": {
+      "bytes": 673939,
+      "sha256": "a18999493b8a92d2590d7ef150990af48ed5a067b4c8a50db02a6a044870522f"
+    },
+    "taxlots/page_0019.geojson": {
+      "bytes": 682866,
+      "sha256": "65df78e4bbe26ee1097bfc9249da50e297e0f5c02379613d2632fac7d87d1b2b"
+    },
+    "taxlots/page_0020.geojson": {
+      "bytes": 644483,
+      "sha256": "634578e6ec48515c2448f9187d7f7642bd0753787cd2f0aae5f346e1b50997f6"
+    },
+    "taxlots/page_0021.geojson": {
+      "bytes": 661721,
+      "sha256": "cee9b0e7de23634919f49483f3614c4101a54d183d7b8df7a9aab671cc3ac061"
+    },
+    "taxlots/page_0022.geojson": {
+      "bytes": 656739,
+      "sha256": "ad69967a6653c56dec8e2ce9489a05488de371ed2411c7f45924b37a01cd378b"
+    },
+    "taxlots/page_0023.geojson": {
+      "bytes": 650566,
+      "sha256": "20a807597cc16c69513ab86a8b1b2be28adb202ecfbd5ed057db1ba68c0f0dc7"
+    },
+    "taxlots/page_0024.geojson": {
+      "bytes": 679784,
+      "sha256": "3cac1eac1b2d012fb3d70a9c05811ee6fc0a810e7b8a8a663dc00673e857b398"
+    },
+    "taxlots/page_0025.geojson": {
+      "bytes": 651829,
+      "sha256": "a236e1126a5b35cbae9c6af247e8c616d81a21e34c7af8017fffb91082528b5d"
+    },
+    "taxlots/page_0026.geojson": {
+      "bytes": 653001,
+      "sha256": "34edd38a0b9818690dfd41ad8e7808098c94d49dc249f6f6eee2bf96e695bd49"
+    },
+    "taxlots/page_0027.geojson": {
+      "bytes": 683693,
+      "sha256": "9221ceec8070b04dcbcc2c6f5b6e9ea1e48b61c3a8b307d58741fa21d621992a"
+    },
+    "taxlots/page_0028.geojson": {
+      "bytes": 699317,
+      "sha256": "9623d8f73e79f35bc42556d7f7a952ad551883b3fef28234445b79bb38ef5039"
+    },
+    "taxlots/page_0029.geojson": {
+      "bytes": 651079,
+      "sha256": "3d2bcf423a133ecbcfe4598260833b6a08a7b469b37ba1b1fb1087a430cefae9"
+    },
+    "taxlots/page_0030.geojson": {
+      "bytes": 661083,
+      "sha256": "dbcdaff66ced62a9be2e1dac791e30fa0313e18c00a1b243ef5e45c83fa3e935"
+    },
+    "taxlots/page_0031.geojson": {
+      "bytes": 652271,
+      "sha256": "b49d613948df4eeecbc7c7445121be0d9d5dddbc73b0219719469d4b1f6ff680"
+    },
+    "taxlots/page_0032.geojson": {
+      "bytes": 652650,
+      "sha256": "ada821d44c645e9ba8f9aa695fef9dc00e1a921891f4912ac71f38f80117dd4d"
+    },
+    "taxlots/page_0033.geojson": {
+      "bytes": 718040,
+      "sha256": "2aca6dd6e23b1b74e3d9a9af9dd23f499d3de2ef6c70fde626b869d46bd2e7db"
+    },
+    "taxlots/page_0034.geojson": {
+      "bytes": 739914,
+      "sha256": "6183d38d36c91de624ecb41ec208e1c9b8b5a277be5465171f688a3a6aaf1671"
+    },
+    "taxlots/page_0035.geojson": {
+      "bytes": 649816,
+      "sha256": "a795666a8d9e47fbcc02aaed794b81b9d6ccb1aa3f9bb5fe7aad0f9f14d72bd1"
+    },
+    "taxlots/page_0036.geojson": {
+      "bytes": 700616,
+      "sha256": "b3b0616a76bc2a32d18f6e11bada67603106d5f7f4fe9831595f5bd33a0d832e"
+    },
+    "taxlots/page_0037.geojson": {
+      "bytes": 658013,
+      "sha256": "c7ec9f6d211ebda33391a75f21e31d1bc229032b5424c48ed7f3c09978e063af"
+    },
+    "taxlots/page_0038.geojson": {
+      "bytes": 678683,
+      "sha256": "39672768c5a96369a2369405077042921fd4f80bb8ca0e3c49b10f6f8503615f"
+    },
+    "taxlots/page_0039.geojson": {
+      "bytes": 883145,
+      "sha256": "e73f5d3fcfc72204009f20edc607fb542aa5b9607eec93e91c0e3487dc79f08c"
+    },
+    "taxlots/page_0040.geojson": {
+      "bytes": 1202896,
+      "sha256": "b38b61c3f886ee1e51278feaf92a477ea4c069fca1928a643996cf255bf78708"
+    },
+    "taxlots/page_0041.geojson": {
+      "bytes": 1120588,
+      "sha256": "187fed81d4e77005a48f8d1dddadd834ec1c0dd53f57a502a174f3cdf032fb56"
+    },
+    "taxlots/page_0042.geojson": {
+      "bytes": 653326,
+      "sha256": "fdecfafbd27b2c3a1c5e8308d619f6f132f482f06b6dbc4db045ce7bd963f1c2"
+    },
+    "taxlots/page_0043.geojson": {
+      "bytes": 635143,
+      "sha256": "2d532b5d596c7cb24a6ea4fcc91c3acb73af11e6307c04fc8a40444710432b8a"
+    },
+    "taxlots/page_0044.geojson": {
+      "bytes": 654251,
+      "sha256": "6215c5f6a27519187d089c6e5fa16cf3d0d64906db46c87a9435998886223e2a"
+    },
+    "taxlots/page_0045.geojson": {
+      "bytes": 645058,
+      "sha256": "1fc5adae8dad458b2e52e77fbd4016483a8a64f5ce91b6f36a33b9d283cf0c10"
+    },
+    "taxlots/page_0046.geojson": {
+      "bytes": 675894,
+      "sha256": "1411d1ddcb4ab134a15f093186d82688b523fc8fddec8cd9d915d0a478d2f445"
+    },
+    "taxlots/page_0047.geojson": {
+      "bytes": 730001,
+      "sha256": "f7d59918f791e50c62b265c7a735d83d753ae71e6a2c59c36a391c92982c39bf"
+    },
+    "taxlots/page_0048.geojson": {
+      "bytes": 940079,
+      "sha256": "4ac856ba4c660e9993dcf8b94b2cc5e052524ace07abe20caf99e98673aa048d"
+    },
+    "taxlots/page_0049.geojson": {
+      "bytes": 681734,
+      "sha256": "a05df98840625df3328be5fdb82b91b6b9943748392e1176934986935014df6a"
+    },
+    "taxlots/page_0050.geojson": {
+      "bytes": 685723,
+      "sha256": "4a2c8632bf790ed882bffa08829e1ebc8f937fdbd5022ea3aeb4e662995aebf6"
+    },
+    "taxlots/page_0051.geojson": {
+      "bytes": 630571,
+      "sha256": "0e9bd2b990f16653621f6363675fee7b24b49faf86d5a9a66b561a5565ab0ca4"
+    },
+    "taxlots/page_0052.geojson": {
+      "bytes": 637179,
+      "sha256": "ab38f93e54a6c355494074482c776ef6cc1072d0e627ac4d15c19e55546c28cc"
+    },
+    "taxlots/page_0053.geojson": {
+      "bytes": 637833,
+      "sha256": "239443e27b80febcdf39dc90b3bb855f0dd18790cdadde4e8481abfbf813df0a"
+    },
+    "taxlots/page_0054.geojson": {
+      "bytes": 669598,
+      "sha256": "bcf4476d178515085f0d69ef9fcb7fa359dee4ee8e21e7c8e97d14f93be714db"
+    },
+    "taxlots/page_0055.geojson": {
+      "bytes": 757953,
+      "sha256": "8d75ead5cf57c0dcbc61676ca4886207c5e40754ccdbd5be12cb9346f0786759"
+    },
+    "taxlots/page_0056.geojson": {
+      "bytes": 669790,
+      "sha256": "3cdd2ed87b8f99847eb61cc12f810168b34a4d07e1a28cf4de45568f2539f6e7"
+    },
+    "taxlots/page_0057.geojson": {
+      "bytes": 651514,
+      "sha256": "5851c3af8691343decbaeb7bad552cf4e36c48447f94585ac197d5d5fc2e59a5"
+    },
+    "taxlots/page_0058.geojson": {
+      "bytes": 816374,
+      "sha256": "2fd67575b72366219a1dc743d003a471ba3678679286b0aef81a934f0b642452"
+    },
+    "taxlots/page_0059.geojson": {
+      "bytes": 849637,
+      "sha256": "8335b91db0d6c4fa30a868130c3d8741ea5c89447cae3dab39a5d723f768eff4"
+    },
+    "taxlots/page_0060.geojson": {
+      "bytes": 659341,
+      "sha256": "9e3abedce836e5640dd4da7b1f2ea39d86383dec9f9c2d1bf60332bad2ded6b9"
+    },
+    "taxlots/page_0061.geojson": {
+      "bytes": 673547,
+      "sha256": "b92a86280f3ba93cf342d4e545a595e1e90c122a39e292a73b2ae1db5de2479f"
+    },
+    "taxlots/page_0062.geojson": {
+      "bytes": 635810,
+      "sha256": "29103a728e0580545e84bdc976cebaf21858a29492960cad842fc805b47b8afa"
+    },
+    "taxlots/page_0063.geojson": {
+      "bytes": 643040,
+      "sha256": "417a6bfb33107415507a64e6718d2a9041a82b16e726592d12d2bf15b7ddf5d8"
+    },
+    "taxlots/page_0064.geojson": {
+      "bytes": 708092,
+      "sha256": "bd503eaa2e5adf9478a34afc5a8c34ae4a8c9e3bdc29bd865fa50030fd32bd48"
+    },
+    "taxlots/page_0065.geojson": {
+      "bytes": 667047,
+      "sha256": "961fe02d011356e8390dd2e6096f3ba9a4f36e1c04f840a45169ada930476812"
+    },
+    "taxlots/page_0066.geojson": {
+      "bytes": 636968,
+      "sha256": "4a2f49f8e756361b3c7a9482f953547f5beefebb7525244f28fa509cb5958047"
+    },
+    "taxlots/page_0067.geojson": {
+      "bytes": 649187,
+      "sha256": "bc5d58730e981ad746367104fcd0ea22ebbc41a3e365f0a40e9fed00e9076409"
+    },
+    "taxlots/page_0068.geojson": {
+      "bytes": 671121,
+      "sha256": "a33a4df72ac8625d283e56c504bfbc90c157357b6daa239694f2b3f3707fb8ff"
+    },
+    "taxlots/page_0069.geojson": {
+      "bytes": 653591,
+      "sha256": "82328d11431be003f43515dd5866b21d929446196e111c6ba27b708f57ce00fd"
+    },
+    "taxlots/page_0070.geojson": {
+      "bytes": 644000,
+      "sha256": "5956a78be186753b720aed01e74475959bf0b0e93ec7a18d9747dfadfeffc608"
+    },
+    "taxlots/page_0071.geojson": {
+      "bytes": 641480,
+      "sha256": "9d98ca8bfeaf5cc4acca2438d098819d616872d242c90953e918ff715a0a8d3e"
+    },
+    "taxlots/page_0072.geojson": {
+      "bytes": 650124,
+      "sha256": "bf4738c7c7e044efcab35b71d958aaee84a944bb5f1e127bcb0ff3989af34a85"
+    },
+    "taxlots/page_0073.geojson": {
+      "bytes": 653498,
+      "sha256": "6e07c4705b34aa34574204da5bb7d24b217db0a74d23415b3da356a0dce69b0d"
+    },
+    "taxlots/page_0074.geojson": {
+      "bytes": 644886,
+      "sha256": "a5a25365af07c6d0cdb3441e71443114af7a93f0ca0f9315459a6fabf16c74cb"
+    },
+    "taxlots/page_0075.geojson": {
+      "bytes": 648205,
+      "sha256": "7cfaaadd8f98a2a6cee3f4e989c443d69f2884a805bb5d732c3a1a0a17d9fa7a"
+    },
+    "taxlots/page_0076.geojson": {
+      "bytes": 671217,
+      "sha256": "dab6bec48ac836e2833d7f13010d84f57b80040bed74cf59f7955df49f4f32bc"
+    },
+    "taxlots/page_0077.geojson": {
+      "bytes": 660095,
+      "sha256": "0f4b41ef2fafe294a2041e2fd295adbff9ef5b706319aa4597b5ae2dcb9f8a60"
+    },
+    "taxlots/page_0078.geojson": {
+      "bytes": 637133,
+      "sha256": "6ea4e325da0c519ef79f4043c6f6ab8d9d1aaf3e735a65351083e7f021c3c201"
+    },
+    "taxlots/page_0079.geojson": {
+      "bytes": 641450,
+      "sha256": "9af54e320f6f1939517e1ff034dd81ca265a0167960e741ef4d6e7b1ee9f1be9"
+    },
+    "taxlots/page_0080.geojson": {
+      "bytes": 650246,
+      "sha256": "4450f949185401ff6fde63ddd5980002c28b76926f9e257aa458f4ae3718edcf"
+    },
+    "taxlots/page_0081.geojson": {
+      "bytes": 670931,
+      "sha256": "a80d55f5a372f49b375d194e7b4390bc2fe69ba4f1679f13dc566bd14748ce88"
+    },
+    "taxlots/page_0082.geojson": {
+      "bytes": 646852,
+      "sha256": "83b82f3d070f564c68bbb1428b000860c298a5fae7ad0ba5b87440e76ddf1f6f"
+    },
+    "taxlots/page_0083.geojson": {
+      "bytes": 676958,
+      "sha256": "4096c18eaa2a8fc02e4d52151b10926fae515527f0b0757606d93a03ced64235"
+    },
+    "taxlots/page_0084.geojson": {
+      "bytes": 671513,
+      "sha256": "8b2b8fc66378207149098881b15b41f32ccd29bd38cc419a807338ee1aa3273d"
+    },
+    "taxlots/page_0085.geojson": {
+      "bytes": 650581,
+      "sha256": "88c349d668672cff75a4d9c00b73e909d29773b7dababe60868b82ff5da3aee9"
+    },
+    "taxlots/page_0086.geojson": {
+      "bytes": 682892,
+      "sha256": "73ec77ecd66cfc82a0b11db6767d594435fc88749ec6022f70e8edbc355f543c"
+    },
+    "taxlots/page_0087.geojson": {
+      "bytes": 668478,
+      "sha256": "4a1fe95f3a50478eacf6894eefbb0c251e3b81972d0fc39241c5e5ad7ba3dce2"
+    },
+    "taxlots/page_0088.geojson": {
+      "bytes": 663793,
+      "sha256": "e3a77bdaa63201a063507d8562191cad543d174f1415b1d52d3cbc67a6062a84"
+    },
+    "taxlots/page_0089.geojson": {
+      "bytes": 711071,
+      "sha256": "62abff51e9cdab08f618c3e5bf39b994ab351db3ea62dcf2e186a691ee028d63"
+    },
+    "taxlots/page_0090.geojson": {
+      "bytes": 684495,
+      "sha256": "84430fcdad074515b7c08d3a158c59e365f8b3489a0b88f34b2eedeed92ed67d"
+    },
+    "taxlots/page_0091.geojson": {
+      "bytes": 651631,
+      "sha256": "0beefc8a18493fa03e8cab999a22cc2248066d85550e2796b527e1a10a1eafec"
+    },
+    "taxlots/page_0092.geojson": {
+      "bytes": 651145,
+      "sha256": "0c1ae8c30bfd6d98bb76e390858b6e4728c6a446d6d41937483d1d7c5c440d9d"
+    },
+    "taxlots/page_0093.geojson": {
+      "bytes": 642575,
+      "sha256": "a12526bcfa4f31d63581d086c829e29500918e8f42d640958063d791e6e7cacc"
+    },
+    "taxlots/page_0094.geojson": {
+      "bytes": 742435,
+      "sha256": "7acb5bd76a2cddc4b7089d3d8dc4284fd5b01fbc9ff31d93477cf5f89944d3e4"
+    },
+    "taxlots/page_0095.geojson": {
+      "bytes": 715665,
+      "sha256": "52f872ecd677e07590c8b4d50cb79d902b832c539d54e40a9948328dda3b3d30"
+    },
+    "taxlots/page_0096.geojson": {
+      "bytes": 645336,
+      "sha256": "978b8e9387d1a331e7bd383f4a9a23daf857306fcff3978f906f90db37e61bb4"
+    },
+    "taxlots/page_0097.geojson": {
+      "bytes": 663497,
+      "sha256": "fea35aa00dda849b36b22ac386c27e9d593a9c218e27fb5ee89cf1a68a7d20f1"
+    },
+    "taxlots/page_0098.geojson": {
+      "bytes": 647544,
+      "sha256": "948e485de9946aedfffe6736dbf8210c32d3bc263525911a7e7b0c1ac33465e8"
+    },
+    "taxlots/page_0099.geojson": {
+      "bytes": 651587,
+      "sha256": "4a5333f9ceafbfeb8db10517a59d60a02e538aabadbb9eb3a266c402f78fb5b4"
+    },
+    "taxlots/page_0100.geojson": {
+      "bytes": 674883,
+      "sha256": "ea92fb1cf4d3f4152a27e300f24cce3256a239abf43d739516bc52eedd5c9268"
+    },
+    "taxlots/page_0101.geojson": {
+      "bytes": 720863,
+      "sha256": "8bc719e1822b5cc95e5e81b5e9269b9fd5f08bc6a432d3c6923bd158d8fe3ddc"
+    },
+    "taxlots/page_0102.geojson": {
+      "bytes": 705431,
+      "sha256": "d3c23033a1fe153c397b4b15c1918dd1e1b5e3e3335553a89b41c010e8b1f979"
+    },
+    "taxlots/page_0103.geojson": {
+      "bytes": 672833,
+      "sha256": "0b9daf2ba70a8d29048c6c03c57a6f7c84d2e1714b5cb217733203cb4da625e0"
+    },
+    "taxlots/page_0104.geojson": {
+      "bytes": 700395,
+      "sha256": "7f655ff96782f6556df23a384bc90aaea914f5d03addec51749ad2c6d1fcffc4"
+    },
+    "taxlots/page_0105.geojson": {
+      "bytes": 678016,
+      "sha256": "32201428b5b27c271c199e80695cbd4541ce7f59514a6e7dad257554127e2a61"
+    },
+    "taxlots/page_0106.geojson": {
+      "bytes": 700719,
+      "sha256": "b4e8e730a63fa8cab767938423b195c2618fda51332314a30065fd343b8f89f8"
+    },
+    "taxlots/page_0107.geojson": {
+      "bytes": 695788,
+      "sha256": "ecd5d39626fede03919cfd6d0bf22c7f80077f36f830dcf4fb69b3accb309bb9"
+    },
+    "taxlots/page_0108.geojson": {
+      "bytes": 631701,
+      "sha256": "957c2c5d674b83e312aefc794502fd32962a80ef9a9e1fa82f13b3e5bc33d7fe"
+    },
+    "taxlots/page_0109.geojson": {
+      "bytes": 657213,
+      "sha256": "07ce7a56f7c25ca8db8c346d3529061daae03073add64012c10c91275873b33a"
+    },
+    "taxlots/page_0110.geojson": {
+      "bytes": 660997,
+      "sha256": "a8ebced77b00e47eb36a4faec72c33e904c104c0b0ef42e0d0e4d7d0f5bfdb9c"
+    },
+    "taxlots/page_0111.geojson": {
+      "bytes": 654155,
+      "sha256": "6931203b3bb19c9f46fac1fc65f0057f3787c69d5d3fb8ef46051dc153222e0d"
+    },
+    "taxlots/page_0112.geojson": {
+      "bytes": 632493,
+      "sha256": "8ea817aa7d9c8ffa425da52808fe4d25c26e5dc756ebca903262b04650d54beb"
+    },
+    "taxlots/page_0113.geojson": {
+      "bytes": 664379,
+      "sha256": "09a4f99c6e3ec087e7cc6dcfa2be010755f42b5a81e049757eefce2147e8ad19"
+    },
+    "taxlots/page_0114.geojson": {
+      "bytes": 672612,
+      "sha256": "b66a8421210096231d1d1adaada442195967686dc0e78af827a43953ca73405c"
+    },
+    "taxlots/page_0115.geojson": {
+      "bytes": 675042,
+      "sha256": "ef664dff4df703fe9d2369f8d0a0593cbbe6874857012fe6c65bfb91bcf882c6"
+    },
+    "taxlots/page_0116.geojson": {
+      "bytes": 699457,
+      "sha256": "e717ddda09af55c428edad8d62a158f64d3fc8ac0632c0211cc20d112bee982d"
+    },
+    "taxlots/page_0117.geojson": {
+      "bytes": 693607,
+      "sha256": "53216b8cef2adb68087f9e6c6602844614f76060ea8929aadb75bd7125db4002"
+    },
+    "taxlots/page_0118.geojson": {
+      "bytes": 681247,
+      "sha256": "1c211d55b6b0dddc7d8f972e3bf64100b636bb1d5e11f50482b1ff51a4c41123"
+    },
+    "taxlots/page_0119.geojson": {
+      "bytes": 673643,
+      "sha256": "bef9df018884fa8a6839b0779f82a5a180243165a016983416ac3fac7796fe98"
+    },
+    "taxlots/page_0120.geojson": {
+      "bytes": 644648,
+      "sha256": "5cd9bb06493e4cc86a5df775dd68b4bee373b4a61b2400e46d250ed1c1e36a49"
+    },
+    "taxlots/page_0121.geojson": {
+      "bytes": 684913,
+      "sha256": "53a2e81f9cdc59fb3985955bc8dde3f6a63fbb0b74713c982e9718eefb3e3035"
+    },
+    "taxlots/page_0122.geojson": {
+      "bytes": 656318,
+      "sha256": "f81baa670b76a8c4e4db70d6b7ff1c37e80c7de2887fa0faee0ba7e32935040d"
+    },
+    "taxlots/page_0123.geojson": {
+      "bytes": 655843,
+      "sha256": "3dbc631c35732a2ba361d9c2ebba72d7c3719c46a4212f68687c0924cefee291"
+    },
+    "taxlots/page_0124.geojson": {
+      "bytes": 653592,
+      "sha256": "4443da20394e564d9db3c83c5484bae2c800f731533eb9eeeeafc9daf3d3eb2b"
+    },
+    "taxlots/page_0125.geojson": {
+      "bytes": 699881,
+      "sha256": "51386adcb7102a029ee4c9695b9ad301c89a40b7ea89674152a5b2372b407a16"
+    },
+    "taxlots/page_0126.geojson": {
+      "bytes": 717669,
+      "sha256": "fd90bbc37f808e9c6ead80a25d71f7759e0c05bb08525771729baa93ce03ed9d"
+    },
+    "taxlots/page_0127.geojson": {
+      "bytes": 651808,
+      "sha256": "cbe50abdf93fa702db8bfba9845da043ecbbf2c820a8ef0b4c2bfe0a477a7516"
+    },
+    "taxlots/page_0128.geojson": {
+      "bytes": 652965,
+      "sha256": "f8dade864f39572365f4fb8014a50be86bebeb917fa771f18996c54352d6daec"
+    },
+    "taxlots/page_0129.geojson": {
+      "bytes": 659336,
+      "sha256": "e6453c0b540a24c1b58bee0754ecdd81e7410ba37f953b8599288c8172ee1d7f"
+    },
+    "taxlots/page_0130.geojson": {
+      "bytes": 645162,
+      "sha256": "ddff31af970d726603b9d47b2e8c57a08bbde298d460623ab5fb50a422e993dd"
+    },
+    "taxlots/page_0131.geojson": {
+      "bytes": 659486,
+      "sha256": "d9a66b0b4e0c1bc78f8b1ab6a2b131bc2bc390214f579128b5987d884e2f7400"
+    },
+    "taxlots/page_0132.geojson": {
+      "bytes": 643015,
+      "sha256": "a82d328f38575c161817f06505e1c5e21693f63aba1969f52935086ea69b10eb"
+    },
+    "taxlots/page_0133.geojson": {
+      "bytes": 645647,
+      "sha256": "dbb496a71d007f11ee159cda89fb216a870e5b7aadcf869bebce2e0ad2da874d"
+    },
+    "taxlots/page_0134.geojson": {
+      "bytes": 669586,
+      "sha256": "9c0ba75eea0215c0a3cb49b83e73169f54c9b2336698b320db1bc88380bba134"
+    },
+    "taxlots/page_0135.geojson": {
+      "bytes": 1421551,
+      "sha256": "f2a928191645726332b21cfa585995c6e4b978db713caa10105010f8ca93e600"
+    },
+    "taxlots/page_0136.geojson": {
+      "bytes": 672284,
+      "sha256": "188b98ddcad9a8cb43303a7eb1eb9783bef88e2ec4b1c763a151ee529a6a0185"
+    },
+    "taxlots/page_0137.geojson": {
+      "bytes": 660052,
+      "sha256": "f567208957c227e0f336ac8b91e0b0788bb773a10fa8862e3b54ed08263c958a"
+    },
+    "taxlots/page_0138.geojson": {
+      "bytes": 670712,
+      "sha256": "370c371b66facfa527f5dc18fe1b3da00a1a2483ae562a9c3c74eaa98504b5a8"
+    },
+    "taxlots/page_0139.geojson": {
+      "bytes": 674038,
+      "sha256": "3f5f4730184046d8460d4265e77c3c164617b73d0042b13ed63a29d0a275ad9a"
+    },
+    "taxlots/page_0140.geojson": {
+      "bytes": 658522,
+      "sha256": "9249e4b56512fd441cc85015eba880bc60bddc88fae47c7b042734dd6fda38af"
+    },
+    "taxlots/page_0141.geojson": {
+      "bytes": 1112217,
+      "sha256": "949b4a9e8a6cba85bc249f66da7c2b68cc141b9e7074e0b47ca6a42c3d82cc21"
+    },
+    "unimproved_row.geojson": {
+      "bytes": 1121873,
+      "sha256": "9f694d8f0a28b03e42d5bdef5908786ab27a989734615d9edb53f6e6bca9a176"
+    },
+    "zoning.geojson": {
+      "bytes": 71133097,
+      "sha256": "defb017917a5defd36ee3de21ff964e24b80d479ada9be46d2ddbf62ba18f29d"
+    }
+  }
+}

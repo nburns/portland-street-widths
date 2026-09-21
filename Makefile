@@ -10,7 +10,7 @@ RAW_INPUTS := data/raw/pavement_management.geojson \
               data/raw/sidewalks.geojson \
               data/raw/zoning.geojson
 
-.PHONY: all fetch verify load row segments blocks ors nrr nrr-geojson curb validate export map \
+.PHONY: all fetch verify load row segments blocks ors nrr nrr-geojson curb validate export \
         site-data site-dev site basemap shell clean clean-db
 .DELETE_ON_ERROR:
 
@@ -49,8 +49,8 @@ $(STAMP)/blocks: sql/06_blocks.sql $(STAMP)/segments
 	$(DUCKDB) "$(DB)" < sql/06_blocks.sql > /dev/null
 	@touch "$@"
 
-out/narrow_blocks.txt: sql/06_blocks.sql $(STAMP)/segments | out
-	$(DUCKDB) "$(DB)" < sql/06_blocks.sql | tee "$@"
+out/narrow_blocks.txt out/narrow_blocks_18ft.geojson: sql/06_blocks.sql $(STAMP)/segments | out
+	$(DUCKDB) "$(DB)" < sql/06_blocks.sql | tee out/narrow_blocks.txt
 
 out/ors_narrow_residential.txt: sql/08_narrow_residential.sql $(STAMP)/blocks | out
 	$(DUCKDB) "$(DB)" < sql/08_narrow_residential.sql | tee "$@"
@@ -87,15 +87,6 @@ nrr:      out/nrr_convertible.txt out/nrr_blocks.geojson
 curb:     $(STAMP)/curb
 validate: out/validation.txt
 export:   out/validation.txt out/narrow_blocks.txt out/ors_narrow_residential.txt out/nrr_convertible.txt out/nrr_blocks.geojson $(STAMP)/curb out/portland_street_widths.csv out/portland_row_confident.csv
-
-build:
-	@mkdir -p build
-
-out/map.html: sql/07_map_export.sql viz/template.html viz/build_map.py $(STAMP)/blocks $(STAMP)/curb | out build
-	$(DUCKDB) "$(DB)" < sql/07_map_export.sql
-	python3 viz/build_map.py
-
-map: out/map.html
 
 # ---------------------------------------------------------------------------
 # site/ - the Vite build. Its GeoJSON is committed, because GitHub Actions
@@ -134,4 +125,4 @@ clean-db:
 	rm -rf -- "$(DB)" "$(DB).wal" "$(STAMP)" out
 
 clean: clean-db
-	rm -rf -- data/raw build
+	rm -rf -- data/raw

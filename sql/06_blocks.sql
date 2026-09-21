@@ -229,3 +229,23 @@ SELECT full_name, round(portland_len_ft) AS len_ft, n_segments,
        road_width_min_ft, road_width_max_ft, row_width_max_ft
 FROM narrow_block WHERE qualifies_18ft
 ORDER BY portland_len_ft DESC LIMIT 12;
+
+-- A plain GeoJSON of the answer, for geojson.io, a gist, QGIS or a tile build.
+-- Lived in the map-export stage until that stage was retired with the canvas
+-- map; it belongs with the table it reads either way.
+SET geometry_always_xy = true;
+COPY (
+  SELECT b.full_name              AS street,
+         b.road_width_max_ft      AS roadway_max_ft,
+         b.road_width_min_ft      AS roadway_min_ft,
+         round(b.portland_len_ft) AS block_len_ft,
+         b.row_width_max_ft       AS row_max_ft,
+         b.n_segments,
+         ST_Transform(s.geom, 'EPSG:2913', 'EPSG:4326', always_xy := true) AS geom
+  FROM narrow_block b
+  JOIN block_member m USING (block_id)
+  JOIN street_segment s USING (street_oid)
+  WHERE b.qualifies_18ft
+  ORDER BY b.block_id, s.street_oid
+) TO 'out/narrow_blocks_18ft.geojson'
+  WITH (FORMAT GDAL, DRIVER 'GeoJSON', SRS 'EPSG:4326');

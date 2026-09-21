@@ -1,8 +1,6 @@
 -- GeoJSON for the static site (site/), as MapLibre sources.
 --
--- Differs from sql/07_map_export.sql, which feeds the single-file canvas map:
--- that one emits a bespoke shape that viz/build_map.py compacts and inlines.
--- MapLibre wants plain FeatureCollections it can fetch, and it does its own
+-- MapLibre wants plain FeatureCollections it can fetch, and does its own
 -- filtering and styling from feature properties, so the geometry ships once
 -- with every quantity the UI needs attached to it.
 --

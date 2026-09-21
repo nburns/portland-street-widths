@@ -17,9 +17,9 @@ nothing outside Portland is exported.
 ## Run it
 
 ```sh
-git clone <remote> street-widths && cd street-widths
+git clone https://github.com/nburns/portland-street-widths
+cd portland-street-widths
 ./setup.sh
-open out/map.html
 ```
 
 `setup.sh` checks for the tools it needs, downloads the source data, verifies
@@ -37,7 +37,7 @@ To drive the stages yourself:
 make fetch      # download only
 make verify     # check data/raw/ against the published fetch
 make            # load -> measure -> validate -> export
-make map        # rebuild out/map.html
+make site       # build the map into site/dist
 make shell      # interactive DuckDB on the result
 ```
 
@@ -77,24 +77,19 @@ than by HTTP status, because a static host serving an SPA fallback answers a
 missing file with `200 text/html` — and MapLibre then stalls forever trying to
 parse HTML as tiles, which presents as an empty page rather than as an error.
 
-`viz/` still builds the older single-file canvas map (`make map`), which inlines
-all of its data into one self-contained HTML file. The two now draw the same
-thing from the same database; see the note at the end of this README.
-
 ## What is in the repo
 
-The pipeline (`fetch/`, `sql/`, `viz/`, `Makefile`) and the finished exports in
-`out/`. You can use the results without running anything.
+The pipeline (`fetch/`, `sql/`, `Makefile`), the map (`site/`), and the
+finished exports in `out/`. You can use the results without running anything.
 
 Not in the repo, because it is ~1.5 GB that git would keep forever:
 
 - `data/raw/` - the upstream GeoJSON. `./setup.sh` downloads it.
 - `data/street_widths.duckdb` - a 640 MB intermediate rebuilt in 80 seconds.
-- `build/` - scratch JSON on the way to `out/map.html`, rewritten every run.
 - `site/node_modules/`, `site/dist/`, `site/public/basemap.pmtiles` - see
   [The site](#the-site).
 
-**Eighteen of the nineteen artifacts in `out/` are byte-reproducible.** Two
+**Nineteen of the twenty artifacts in `out/` are byte-reproducible.** Two
 clean rebuilds produce identical files, which is what makes `git status` after
 a rebuild meaningful: a diff is a real change in the data or the code, never
 the scheduler. The exception is `portland_street_widths.gpkg`, which differs by
@@ -129,9 +124,6 @@ not byte-stable, and the layers themselves are revised. A mismatch means the
 numbers here may no longer reproduce exactly - it does not mean the download
 failed. `python3 fetch/verify.py --write` adopts the current download as the
 new baseline.
-
-`out/map.html` is self-contained - all data is inlined, and the only external
-reference is Google Fonts. Drop it on any static host, or open it from disk.
 
 ## What it found
 
@@ -454,12 +446,23 @@ distribution, modal widths, centerline centring, coverage by street type,
 plausibility of the leftover space, an outlier census, PMS join coverage, the
 curb-extension cross-check, and a spot check on a known block.
 
-## Two maps, for now
+## Licence
 
-`out/map.html` (from `viz/`) and `site/` render the same blocks from the same
-database. That is duplication, and it is deliberate only for as long as it
-takes to decide which survives: the canvas version is a single file you can
-email or open from disk with no server and no dependencies, and the MapLibre
-version has a basemap, real zoom, and about six hundred fewer lines of
-hand-rolled rendering. Keeping both means every change to the width logic has
-to be made twice.
+Two licences, because the repository holds two different kinds of thing.
+
+**Code** - `sql/`, `site/src/`, `site/scripts/`, `fetch/`, `setup.sh`, the
+`Makefile` - is MIT. See [LICENSE](LICENSE).
+
+**Data** - the exports in `out/` and the GeoJSON in `site/public/data/` - is
+CC BY 4.0. See [LICENSE-DATA](LICENSE-DATA). Attribute as:
+
+> Portland right-of-way and roadway widths, Nick Burns,
+> https://github.com/nburns/portland-street-widths, CC BY 4.0.
+
+The split is deliberate: Creative Commons advises against CC licences for
+software, and MIT says nothing useful about a dataset.
+
+Everything here is derived from open data published by the City of Portland
+and Metro RLIS, and remains subject to those publishers' terms. The basemap is
+© OpenStreetMap contributors, ODbL. **None of this is authoritative municipal
+data** - read the caveats above before citing a number.

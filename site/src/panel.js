@@ -59,7 +59,10 @@ export function renderReadout({ block, narrowing }) {
   }
 
   const rows = [
-    ["Narrowest point", `${block.wn} ft`],
+    [
+      "Narrowest point",
+      `${block.wn} ft` + (block.nsrc === "curb" ? " *" : ""),
+    ],
     ["Widest point", `${block.wx} ft`],
     ["Block length", `${block.bl.toLocaleString()} ft`],
     [
@@ -68,13 +71,21 @@ export function renderReadout({ block, narrowing }) {
     ],
     ["Width from", block.src === "pms" ? "PBOT pavement record" : "curb lines (no PBOT record)"],
   ];
+  // The asterisk earns an explanation rather than sitting there as decoration.
+  const footnote =
+    block.nsrc === "curb" && block.src === "pms"
+      ? '<p class="hint">* narrowest point measured from the curb lines; ' +
+        "PBOT's pavement record does not go below " +
+        `${block.wx} ft on this block.</p>`
+      : "";
   if (block.rw != null) rows.push(["Right of way", `${block.rw.toFixed(0)} ft`]);
 
   el.innerHTML =
     `<p class="readout-name">${esc(block.street)}</p>` +
     "<dl>" +
     rows.map((r) => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join("") +
-    "</dl>";
+    "</dl>" +
+    footnote;
 }
 
 export function renderControls(state) {
@@ -114,5 +125,9 @@ export function renderDerivedNotes(blocks) {
   $("noteConvertible").textContent = miles((b) => b.wx <= 24);
   $("noteEligible").textContent = miles(() => true);
   $("noteStrict").textContent = miles((b) => b.wx <= 18);
+  const curbWon = blocks.filter((b) => b.wn <= 18 && b.nsrc === "curb");
+  $("noteCurbWon").textContent = curbWon.length.toLocaleString();
+  $("noteCurbWonMiles").textContent =
+    fmt1(curbWon.reduce((a, b) => a + b.bl, 0) / 5280);
 }
 

@@ -18,6 +18,7 @@ export function indexBlocks(featureCollection) {
         nseg: p.nseg,
         rw: p.rw,
         src: p.src,
+        nsrc: p.nsrc,
         sh: p.sh,
         nrr: p.nrr,
       });

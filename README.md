@@ -338,6 +338,14 @@ ramps that drop from 60 ft to 8 ft at a gore curb.
 338 are on locally classified streets. 150 reach 18 ft or less. The map draws
 each one as the stretch of street it occupies, on a toggle.
 
+Under the *narrow somewhere* reading those count, so a block's narrowest point
+is the lower of PBOT's pavement record and the curb measurement. 202 blocks -
+20.7 miles - qualify on a narrow point only the curb lines can see. Only
+stations with street curb on both sides count toward it: a shoulder line can
+sit inside the roadway rather than at its edge, and taking any curb evidence
+would put the answer at 109.7 miles against 98.4, the difference being mostly
+that artefact.
+
 The map picks one reading of "at any point" at a time, because the two are
 alternative constructions of the same sentence rather than conditions that
 stack. **Narrow somewhere** tests the block's narrowest point and is the

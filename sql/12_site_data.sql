@@ -34,27 +34,46 @@ SET geometry_always_xy = true;
 -- needing 2 ft of edge line is the subject of this map as much as one needing
 -- none.
 --
+-- The narrowest point folds in the curb profile wherever it measured lower
+-- than the pavement record. A block PBOT records as a flat 30 ft can still be
+-- 18 ft between two stormwater planters, and under the "narrow at any point"
+-- reading that is the whole question - the pavement record simply cannot see
+-- it, because it carries one width per section.
+--
+-- Only stations with street curb on both sides count toward that. Shoulder
+-- lines can sit inside the roadway rather than at its edge: SE Clinton at SE
+-- 77th reads a flat 8.0 ft from two shoulder lines at +/-4.0 ft of the
+-- centerline, on a street PBOT records as 22 ft and uncurbed. Taking any curb
+-- evidence would put the answer at 109.7 miles instead of 86.4, and the
+-- difference is mostly that kind of artefact.
+--
 --   wn/wx  narrowest and widest width known for the block, ft
 --   src    'pms' where PBOT records a pavement width, 'curb' where the width
 --          is measured off the curb lines instead
+--   nsrc   which of the two produced wn, so the readout can say so
 --   sh     shoulder needed each side to bring the travel way to 18 ft
 --   nrr    passes the whole ORS 801.368 test today, on the strict reading
 COPY (
   WITH eligible AS (
     -- has a pavement record: eligibility already decided in sql/09
     SELECT c.block_id, c.full_name, c.len_ft, c.n_segments,
-           c.pave_min_ft AS wn, c.pave_max_ft AS wx, 'pms' AS src,
+           least(c.pave_min_ft, w.curb_min_outer_ft) AS wn,
+           c.pave_max_ft AS wx, 'pms' AS src,
+           CASE WHEN w.curb_min_outer_ft IS NOT NULL
+                 AND w.curb_min_outer_ft < c.pave_min_ft THEN 'curb'
+                ELSE 'pms' END AS nsrc,
            c.shoulder_each_side_ft AS sh,
            (n.cond_width AND n.cond_two_way AND n.cond_residence) AS nrr
     FROM nrr_candidate c
     JOIN narrow_residential n USING (block_id)
+    LEFT JOIN block_curb_width w ON w.block_id = c.block_id AND w.curb_testable
     UNION ALL
     -- no pavement record, but the curb lines can measure it. Same three
     -- statutory conditions, evaluated here because sql/09 requires a
     -- pavement width before it will consider a block at all.
     SELECT
       b.block_id, b.full_name, b.portland_len_ft, b.n_segments,
-      w.curb_min_ft, w.curb_max_ft, 'curb',
+      coalesce(w.curb_min_outer_ft, w.curb_min_ft), w.curb_max_ft, 'curb', 'curb',
       round((w.curb_max_ft - 18) / 2.0, 1),
       w.curb_max_ft <= 18
     FROM block b
@@ -71,7 +90,7 @@ COPY (
   SELECT
     e.block_id,
     coalesce(e.full_name, '(unnamed)') AS street,
-    e.wn, e.wx, e.src, e.sh, e.nrr,
+    e.wn, e.wx, e.src, e.nsrc, e.sh, e.nrr,
     round(e.len_ft)                    AS bl,
     e.n_segments                       AS nseg,
     round(s.row_width_ft, 1)           AS rw,
